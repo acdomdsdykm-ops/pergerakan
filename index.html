@@ -162,38 +162,39 @@ input,select{
 <script>
 
 /* ================= CONFIG ================= */
-const API = "https://script.google.com/macros/s/AKfycbxHCWn5ktvbMV9CLvkRibTwrC_j_4af7qXTlLcq8iYbcx-QRSdtzj_Z1KB6IS5_6ue6CA/exec";
+<script>
+const API = "https://script.google.com/macros/s/AKfycbwY1FQi9PuIomZxAVZSje6P8cSRNSIsHWDYAAK7tkaI2k1R5x3aS9PVH-xO7AUxuKEX0g/exec";
 
-let DATA = [];
-let chartInstance;
-
-/* ================= API ================= */
+/* ================= SAFE API ================= */
 async function api(payload){
 
   try{
-
     const res = await fetch(API,{
       method:"POST",
-      headers:{
-        "Content-Type":"application/json"
-      },
+      headers:{ "Content-Type":"application/json" },
       body: JSON.stringify(payload)
     });
 
     if(!res.ok) throw new Error("HTTP "+res.status);
 
-    const text = await res.text();
-
-    try {
-      return JSON.parse(text);
-    } catch(e){
-      throw new Error("Invalid JSON from server");
-    }
+    return await res.json();
 
   }catch(err){
-    console.log("API ERROR:",err);
-    alert("Sistem API tidak stabil / connection failed");
+    console.log(err);
+    alert("API connection failed");
   }
+}
+
+/* ================= DASHBOARD ================= */
+async function loadDashboard(){
+
+  const d = await api({action:"getDashboard"});
+
+  document.getElementById("kpi").innerHTML = `
+    Total: ${d.total} <br>
+    Hadir: ${d.hadir} <br>
+    Cuti: ${d.cuti}
+  `;
 }
 
 /* ================= LOGIN ================= */
@@ -201,18 +202,22 @@ async function login(){
 
   const r = await api({
     action:"login",
-    username: u.value,
-    password: p.value
+    username:u.value,
+    password:p.value
   });
 
-  if(r && r.status==="ok"){
-    login.style.display="none";
+  if(r.status==="ok"){
+    loginBox.style.display="none";
     app.style.display="block";
-    load();
-  }else{
-    alert("Login gagal");
+    loadDashboard();
   }
 }
+
+/* ================= LOGOUT ================= */
+function logout(){
+  location.reload();
+}
+</script>
 
 /* ================= LOAD DATA ================= */
 async function load(){
