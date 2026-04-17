@@ -1,107 +1,264 @@
 <!DOCTYPE html>
-<html>
+<html lang="ms">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>HRMIS MDS FINAL</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HRMIS MDS FINAL V3</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-body{margin:0;font-family:Segoe UI;background:#0b3d2e;color:#fff;}
-#login{width:300px;margin:120px auto;background:#fff;color:#000;padding:20px;border-radius:10px;}
+
+/* ===== BACKGROUND KERAJAAN ===== */
+body{
+  margin:0;
+  font-family:Segoe UI;
+  background:linear-gradient(135deg,#0b3d2e,#145c43,#0f2f24);
+  color:white;
+}
+
+/* ===== LOGIN ===== */
+#login{
+  width:320px;
+  margin:120px auto;
+  background:white;
+  color:black;
+  padding:20px;
+  border-radius:12px;
+}
+
+/* ===== APP ===== */
 #app{display:none;}
-.panel{background:rgba(255,255,255,0.1);padding:10px;margin:10px;}
+
+/* ===== TOPBAR ===== */
+.topbar{
+  background:rgba(0,0,0,0.35);
+  padding:15px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+/* ===== LAYOUT ===== */
+.wrapper{
+  display:flex;
+}
+
+/* SIDEBAR */
+.sidebar{
+  width:220px;
+  background:rgba(0,0,0,0.25);
+  min-height:100vh;
+  padding:10px;
+}
+
+.sidebar button{
+  width:100%;
+  padding:10px;
+  margin:5px 0;
+  border:none;
+  background:#0b3d2e;
+  color:white;
+  cursor:pointer;
+}
+
+/* MAIN */
+.main{
+  flex:1;
+  padding:15px;
+}
+
+/* PANEL */
+.panel{
+  background:rgba(255,255,255,0.1);
+  padding:15px;
+  border-radius:10px;
+  margin-bottom:15px;
+}
+
+/* INPUT */
+input{
+  padding:8px;
+  width:100%;
+  margin:5px 0;
+}
+
+/* MOBILE */
+@media(max-width:768px){
+  .wrapper{flex-direction:column;}
+  .sidebar{width:100%;}
+}
+
 </style>
 </head>
 
 <body>
 
+<!-- ================= LOGIN ================= -->
 <div id="login">
 <h3>LOGIN HRMIS</h3>
-<input id="u"><br><br>
-<input id="p" type="password"><br><br>
+<input id="u" placeholder="Username">
+<input id="p" type="password" placeholder="Password">
 <button onclick="login()">Login</button>
 </div>
 
+<!-- ================= APP ================= -->
 <div id="app">
 
-<h3>HRMIS DASHBOARD</h3>
+<div class="topbar">
+<div>🏛️ MAJLIS DAERAH SIMUNJAN HRMIS</div>
 <button onclick="logout()">Logout</button>
+</div>
 
+<div class="wrapper">
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+<button onclick="load()">📊 Dashboard</button>
+<button onclick="showAdd()">➕ Tambah Pegawai</button>
+<button onclick="load()">🔍 Refresh Data</button>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+<!-- KPI -->
 <div class="panel">
-<button onclick="load()">Load Pegawai</button>
+<h3>📊 KPI Dashboard</h3>
+<canvas id="chart"></canvas>
+</div>
+
+<!-- LIST -->
+<div class="panel">
+<h3>👨‍💼 Senarai Pegawai</h3>
 <div id="list"></div>
 </div>
 
-<div class="panel">
+<!-- ADD -->
+<div class="panel" id="addBox" style="display:none;">
+<h3>➕ Tambah Pegawai</h3>
+
 <input id="nama" placeholder="Nama">
 <input id="jawatan" placeholder="Jawatan">
 <input id="jabatan" placeholder="Jabatan">
-<input id="status" placeholder="Status">
-<button onclick="add()">Tambah</button>
+<input id="status" placeholder="Status (Hadir/Cuti)">
+<input id="catatan" placeholder="Catatan">
+
+<button onclick="add()">Simpan</button>
 </div>
 
+</div>
 </div>
 
 <script>
 
-const API="https://script.google.com/macros/s/AKfycbwQYe-_oZnd2sMXHpSj2Z81PuTS0DkLiVxDW2m4trY28Q1dxkTvY0QG_6ZLv92QvT3uuw/exec";
+/* ================= API ================= */
+const API = "https://script.google.com/macros/s/AKfycbwQYe-_oZnd2sMXHpSj2Z81PuTS0DkLiVxDW2m4trY28Q1dxkTvY0QG_6ZLv92QvT3uuw/exec";
 
-/* ================= API CALL ================= */
+/* ================= SAFE API CALL ================= */
 async function api(payload){
-  const res = await fetch(API,{
-    method:"POST",
-    headers:{
-      "Content-Type":"application/json"
-    },
-    body: JSON.stringify(payload)
-  });
 
-  return await res.json();
+  try{
+    const res = await fetch(API,{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    return await res.json();
+
+  }catch(err){
+    alert("API ERROR: "+err);
+  }
 }
 
 /* ================= LOGIN ================= */
 async function login(){
 
-let r=await api({
-action:"login",
-username:u.value,
-password:p.value
-});
+  let r = await api({
+    action:"login",
+    username:u.value,
+    password:p.value
+  });
 
-if(r.status === "ok"){
-  sessionStorage.setItem("role", r.role);
-  location.reload();
-}
+  if(r && r.status==="ok"){
+    sessionStorage.setItem("role",r.role);
+    login.style.display="none";
+    app.style.display="block";
+    load();
+  }else{
+    alert("Login gagal");
+  }
 }
 
-/* ================= LOAD ================= */
+/* ================= LOAD DATA ================= */
 async function load(){
 
-let d=await api({action:"getPegawai"});
+  let d = await api({action:"getPegawai"});
 
-let h="";
-d.forEach(x=>{
-h+=`<div>${x.nama} - ${x.jawatan} (${x.status})</div>`;
-});
+  if(!d) return;
 
-list.innerHTML=h;
+  let html="";
+  let hadir=0, cuti=0;
+
+  d.forEach(x=>{
+
+    html+=`
+      <div style="padding:5px;border-bottom:1px solid #ccc">
+        ${x.nama} - ${x.jawatan} (${x.status})
+      </div>
+    `;
+
+    if(x.status=="Hadir") hadir++;
+    if(x.status=="Cuti") cuti++;
+  });
+
+  list.innerHTML = html;
+
+  renderChart(hadir,cuti);
+}
+
+/* ================= CHART ================= */
+function renderChart(hadir,cuti){
+
+  new Chart(chart,{
+    type:"bar",
+    data:{
+      labels:["Hadir","Cuti"],
+      datasets:[{
+        data:[hadir,cuti],
+        backgroundColor:["#00ff99","#ff4d4d"]
+      }]
+    }
+  });
+
 }
 
 /* ================= ADD ================= */
 async function add(){
 
-await api({
-action:"addPegawai",
-nama:nama.value,
-jawatan:jawatan.value,
-jabatan:jabatan.value,
-status:status.value
-});
+  await api({
+    action:"addPegawai",
+    nama:nama.value,
+    jawatan:jawatan.value,
+    jabatan:jabatan.value,
+    status:status.value,
+    catatan:catatan.value
+  });
 
-load();
+  showAdd();
+  load();
 }
 
-/* ================= LOGOUT ================= */
+/* ================= UI ================= */
+function showAdd(){
+  addBox.style.display =
+  addBox.style.display==="none" ? "block":"none";
+}
+
+/* ================= LOGOUT FIX (STABLE) ================= */
 function logout(){
   sessionStorage.clear();
   localStorage.clear();
