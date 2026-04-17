@@ -11,7 +11,9 @@ body{
   font-family:Segoe UI;
   background:#f4f6f9;
 }
-.header{
+
+/* TOP BAR */
+.topbar{
   background:#0b3d2e;
   color:white;
   padding:15px;
@@ -19,8 +21,41 @@ body{
   justify-content:space-between;
   align-items:center;
 }
-.container{padding:15px;}
 
+/* SIDEBAR */
+.sidebar{
+  position:fixed;
+  top:0;
+  left:0;
+  width:230px;
+  height:100vh;
+  background:#0b3d2e;
+  color:white;
+  padding-top:60px;
+  transition:0.3s;
+}
+
+.sidebar button{
+  width:100%;
+  padding:12px;
+  background:none;
+  border:none;
+  color:white;
+  text-align:left;
+  cursor:pointer;
+}
+
+.sidebar button:hover{
+  background:rgba(255,255,255,0.1);
+}
+
+/* MAIN */
+.main{
+  margin-left:230px;
+  padding:15px;
+}
+
+/* PANEL */
 .panel{
   background:white;
   padding:15px;
@@ -29,23 +64,9 @@ body{
   box-shadow:0 2px 6px rgba(0,0,0,0.1);
 }
 
-input,select,button{
-  padding:8px;
-  margin:5px;
-  border-radius:8px;
-  border:1px solid #ccc;
-}
-
-button{
-  cursor:pointer;
-  background:#0b3d2e;
-  color:white;
-  border:none;
-}
-
+/* CARD */
 .card{
   display:flex;
-  align-items:center;
   gap:10px;
   padding:10px;
   border-bottom:1px solid #eee;
@@ -59,9 +80,13 @@ button{
 
 /* MOBILE */
 @media(max-width:768px){
-  .header{
-    flex-direction:column;
-    text-align:center;
+  .sidebar{
+    position:relative;
+    width:100%;
+    height:auto;
+  }
+  .main{
+    margin-left:0;
   }
 }
 </style>
@@ -69,43 +94,50 @@ button{
 
 <body>
 
-<div class="header">
+<div class="topbar">
   <div><b>MAJLIS DAERAH SIMUNJAN</b></div>
-  <div>
-    <button onclick="downloadPDF()">📄 PDF</button>
-    <button onclick="logout()">Logoff</button>
-  </div>
+  <button onclick="logout()">Logoff</button>
 </div>
 
-<div class="container">
+<!-- SIDEBAR MENU -->
+<div class="sidebar">
+  <button onclick="show('summary')">📊 Summary Jabatan</button>
+  <button onclick="show('search')">🔍 Carian</button>
+  <button onclick="show('add')">➕ Tambah Pegawai</button>
+  <button onclick="show('list')">🏢 Senarai Jabatan</button>
+</div>
 
-<!-- DASHBOARD SUMMARY -->
-<div class="panel">
+<!-- MAIN CONTENT -->
+<div class="main">
+
+<!-- SUMMARY -->
+<div id="summary" class="panel section">
   <h3>📊 Summary Jabatan</h3>
-  <div id="summary"></div>
+  <div id="summaryBox"></div>
 </div>
 
-<!-- FILTER -->
-<div class="panel">
-  <h3>🔍 Carian</h3>
-  <input id="search" placeholder="Cari nama..." onkeyup="filter()">
+<!-- SEARCH -->
+<div id="search" class="panel section" style="display:none;">
+  <h3>🔍 Carian Pegawai</h3>
+  <input id="searchInput" placeholder="Cari nama..." onkeyup="filterData()" style="width:100%;padding:10px;">
+  <div id="searchResult"></div>
 </div>
 
-<!-- FORM -->
-<div class="panel">
-  <h3>Tambah Pegawai</h3>
-  <input id="nama" placeholder="Nama">
-  <input id="jawatan" placeholder="Jawatan">
-  <input id="jabatan" placeholder="Jabatan">
-  <input id="status" placeholder="Status">
-  <input type="file" id="file">
-  <button onclick="add()">Tambah</button>
+<!-- ADD -->
+<div id="add" class="panel section" style="display:none;">
+  <h3>➕ Tambah Pegawai</h3>
+  <input id="nama" placeholder="Nama"><br><br>
+  <input id="jawatan" placeholder="Jawatan"><br><br>
+  <input id="jabatan" placeholder="Jabatan"><br><br>
+  <input id="status" placeholder="Status"><br><br>
+  <input type="file" id="file"><br><br>
+  <button onclick="add()">Simpan</button>
 </div>
 
-<!-- LIST BY JABATAN -->
-<div class="panel">
+<!-- LIST -->
+<div id="list" class="panel section" style="display:none;">
   <h3>🏢 Senarai Mengikut Jabatan</h3>
-  <div id="list"></div>
+  <div id="listBox"></div>
 </div>
 
 </div>
@@ -115,7 +147,7 @@ button{
 const API="https://script.google.com/macros/s/AKfycbxGqBk7rG5FmDj_og7Icx2wrfW58JxZw7c7MaMcs0Hj3TOj0r4lMJykVNwsjy_6iO9SvQ/exec";
 let dataGlobal=[];
 
-/* LOAD */
+/* LOAD DATA */
 async function load(){
   let res=await fetch(API,{
     method:"POST",
@@ -123,31 +155,38 @@ async function load(){
   });
 
   dataGlobal=await res.json();
-  render(dataGlobal);
-  summary(dataGlobal);
+
+  renderSummary();
+  renderList();
+}
+
+/* NAVIGATION */
+function show(id){
+  document.querySelectorAll('.section').forEach(s=>s.style.display="none");
+  document.getElementById(id).style.display="block";
 }
 
 /* SUMMARY */
-function summary(data){
+function renderSummary(){
   let group={};
 
-  data.forEach(d=>{
+  dataGlobal.forEach(d=>{
     group[d.jabatan]=(group[d.jabatan]||0)+1;
   });
 
   let html="";
   for(let j in group){
-    html+=`<div>${j}: <b>${group[j]}</b></div>`;
+    html+=`<div>🏢 ${j} : <b>${group[j]}</b></div>`;
   }
 
-  summary.innerHTML=html;
+  summaryBox.innerHTML=html;
 }
 
-/* GROUP LIST */
-function render(data){
+/* LIST BY JABATAN */
+function renderList(){
   let group={};
 
-  data.forEach(d=>{
+  dataGlobal.forEach(d=>{
     if(!group[d.jabatan]) group[d.jabatan]=[];
     group[d.jabatan].push(d);
   });
@@ -169,18 +208,32 @@ function render(data){
     });
   }
 
-  list.innerHTML=html;
+  listBox.innerHTML=html;
 }
 
-/* FILTER */
-function filter(){
-  let k=search.value.toLowerCase();
+/* SEARCH */
+function filterData(){
+  let k=searchInput.value.toLowerCase();
 
   let filtered=dataGlobal.filter(d=>
-    d.nama.toLowerCase().includes(k)
+    d.nama.toLowerCase().includes(k) ||
+    d.jawatan.toLowerCase().includes(k)
   );
 
-  render(filtered);
+  let html="";
+
+  filtered.forEach(p=>{
+    html+=`
+    <div class="card">
+      <img src="${p.gambar_url}">
+      <div>
+        <b>${p.nama}</b><br>
+        ${p.jawatan} | ${p.status}
+      </div>
+    </div>`;
+  });
+
+  searchResult.innerHTML=html;
 }
 
 /* ADD */
@@ -207,11 +260,6 @@ async function add(){
   load();
 }
 
-/* PDF */
-function downloadPDF(){
-  window.open(API+"?action=pdf","_blank");
-}
-
 /* BASE64 */
 function toBase64(file){
   return new Promise(res=>{
@@ -226,6 +274,7 @@ function logout(){
   location.reload();
 }
 
+/* INIT */
 load();
 
 </script>
