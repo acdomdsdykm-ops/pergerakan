@@ -464,6 +464,27 @@ reportBody.innerHTML = data.map(s=>`
 `).join("");
 };
 
+window.edit = function(id){
+
+let s = staff.find(x => x.id === id);
+if(!s){
+alert("Data tak jumpa");
+return;
+}
+
+// isi form add page
+document.getElementById("name").value = s.name;
+document.getElementById("job").value = s.job;
+document.getElementById("dept").value = s.dept;
+document.getElementById("status").value = s.status;
+
+// simpan id untuk update (optional future use)
+editId = id;
+
+// pergi page add
+show("add");
+};
+  
 </script>
 
 </body>
