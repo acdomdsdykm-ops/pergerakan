@@ -171,19 +171,28 @@ let chartInstance;
 async function api(payload){
 
   try{
+
     const res = await fetch(API,{
       method:"POST",
-      headers:{ "Content-Type":"application/json" },
+      headers:{
+        "Content-Type":"application/json"
+      },
       body: JSON.stringify(payload)
     });
 
     if(!res.ok) throw new Error("HTTP "+res.status);
 
-    return await res.json();
+    const text = await res.text();
+
+    try {
+      return JSON.parse(text);
+    } catch(e){
+      throw new Error("Invalid JSON from server");
+    }
 
   }catch(err){
-    console.log(err);
-    alert("API tidak dapat disambungkan");
+    console.log("API ERROR:",err);
+    alert("Sistem API tidak stabil / connection failed");
   }
 }
 
