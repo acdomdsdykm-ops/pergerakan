@@ -3,36 +3,140 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HRMIS FINAL SYSTEM</title>
+<title>HRMIS PREMIUM SYSTEM</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-body{margin:0;font-family:Segoe UI;background:#0f2f24;color:#fff}
+body{
+  margin:0;
+  font-family:"Segoe UI", Arial;
+  background:#eef2f6;
+  color:#1a1a1a;
+}
 
+/* LOGIN */
 #loginBox{
-  width:320px;margin:80px auto;background:#fff;color:#000;
-  padding:20px;border-radius:10px;
+  width:340px;
+  margin:120px auto;
+  background:#fff;
+  padding:25px;
+  border-radius:12px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.1);
 }
 
-#app{display:none}
+/* APP CENTERED */
+#app{
+  display:none;
+  max-width:1200px;
+  margin:30px auto;
+  background:#fff;
+  border-radius:16px;
+  overflow:hidden;
+  box-shadow:0 10px 40px rgba(0,0,0,0.08);
+}
 
+/* HEADER */
 .header{
-  display:flex;justify-content:space-between;
-  padding:15px;background:#00000055;
+  background:#0b2e4a;
+  color:#fff;
+  padding:18px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
 }
 
+/* LAYOUT */
 .container{display:flex}
 
-.sidebar{width:220px;background:#00000033;min-height:100vh;padding:10px}
+/* SIDEBAR */
+.sidebar{
+  width:220px;
+  background:#f7f9fc;
+  border-right:1px solid #e5e9f0;
+  padding:15px;
+}
 
-.sidebar button{width:100%;margin:5px 0;padding:10px}
+.sidebar button{
+  width:100%;
+  padding:12px;
+  margin:6px 0;
+  border:none;
+  border-radius:8px;
+  background:#0b2e4a;
+  color:#fff;
+  cursor:pointer;
+}
 
-.main{flex:1;padding:15px}
+/* MAIN */
+.main{
+  flex:1;
+  padding:20px;
+  background:#f4f7fb;
+}
 
-.panel{background:#ffffff11;padding:15px;margin-bottom:10px;border-radius:10px}
+/* PANELS */
+.panel{
+  background:#fff;
+  border-radius:12px;
+  padding:18px;
+  margin-bottom:16px;
+  box-shadow:0 4px 18px rgba(0,0,0,0.05);
+}
 
-img{border-radius:50%}
+/* INPUT */
+input,select{
+  width:100%;
+  padding:10px;
+  margin:6px 0;
+  border-radius:8px;
+  border:1px solid #d9dee7;
+}
+
+/* KPI */
+.kpi{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
+}
+
+.kpi-box{
+  background:linear-gradient(135deg,#0b2e4a,#1d5c8f);
+  color:#fff;
+  padding:16px;
+  border-radius:12px;
+  text-align:center;
+}
+
+.kpi-box h2{
+  margin:5px 0;
+  font-size:26px;
+}
+
+/* LIST */
+.list-item{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px;
+  border-bottom:1px solid #eee;
+}
+
+/* IMAGE */
+img{
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  object-fit:cover;
+  border:2px solid #0b2e4a;
+}
+
+/* MOBILE */
+@media(max-width:900px){
+  .container{flex-direction:column}
+  .sidebar{width:100%}
+  .kpi{grid-template-columns:1fr}
+}
 </style>
 </head>
 
@@ -41,8 +145,8 @@ img{border-radius:50%}
 <!-- LOGIN -->
 <div id="loginBox">
 <h3>LOGIN HRMIS</h3>
-<input id="u" placeholder="username">
-<input id="p" type="password" placeholder="password">
+<input id="u" placeholder="Username">
+<input id="p" type="password" placeholder="Password">
 <button onclick="doLogin()">Login</button>
 </div>
 
@@ -50,32 +154,55 @@ img{border-radius:50%}
 <div id="app">
 
 <div class="header">
-<div>🏛 HRMIS FINAL</div>
+<div>🏛 HRMIS PREMIUM SYSTEM</div>
 <button onclick="logout()">Logout</button>
 </div>
 
 <div class="container">
 
+<!-- SIDEBAR -->
 <div class="sidebar">
 <button onclick="load()">Dashboard</button>
-<button onclick="toggleForm()">Tambah</button>
+<button onclick="toggleForm()">Tambah Pegawai</button>
 </div>
 
+<!-- MAIN -->
 <div class="main">
 
+<!-- KPI -->
 <div class="panel">
-<h3>KPI</h3>
-<canvas id="chart"></canvas>
+<h3 style="color:#0b2e4a">📊 Dashboard Utama</h3>
+
+<div class="kpi">
+<div class="kpi-box">
+<div>Total</div>
+<h2 id="total">0</h2>
 </div>
 
-<div class="panel">
-<input id="search" placeholder="Search..." oninput="render()">
+<div class="kpi-box">
+<div>Hadir</div>
+<h2 id="hadir">0</h2>
 </div>
 
+<div class="kpi-box">
+<div>Cuti</div>
+<h2 id="cuti">0</h2>
+</div>
+</div>
+
+</div>
+
+<!-- SEARCH -->
+<div class="panel">
+<input id="search" placeholder="🔍 Cari pegawai..." oninput="render()">
+</div>
+
+<!-- LIST -->
 <div class="panel" id="list"></div>
 
+<!-- FORM -->
 <div class="panel" id="form" style="display:none;">
-<h3>Tambah Pegawai</h3>
+<h3>➕ Tambah Pegawai</h3>
 
 <input id="nama">
 <input id="jawatan">
@@ -100,10 +227,10 @@ img{border-radius:50%}
 <script>
 
 const API = "https://script.google.com/macros/s/AKfycbyNmIrv1ifNBiCeIuLy92qmt9uHp-16FyEXvEaKEptE4HeptYc0JKHpukSMT6grTKBz2g/exec";
-let DATA = [];
-let token = localStorage.getItem("token");
 
-/* ================= API ================= */
+let DATA = [];
+
+/* ================= API (NO CORS ISSUE) ================= */
 async function api(payload){
 
   const form = new URLSearchParams();
@@ -127,11 +254,13 @@ async function doLogin(){
 
   if(r.status==="ok"){
     localStorage.setItem("token", r.token);
+
     loginBox.style.display="none";
     app.style.display="block";
+
     load();
   }else{
-    alert("Login failed");
+    alert("Login gagal");
   }
 }
 
@@ -140,11 +269,22 @@ async function load(){
 
   DATA = await (await fetch(API+"?action=getPegawai")).json();
 
+  updateKPI();
   render();
-  chart();
 }
 
-/* ================= RENDER ================= */
+/* ================= KPI ================= */
+function updateKPI(){
+
+  const h = DATA.filter(x=>x.status==="Hadir").length;
+  const c = DATA.filter(x=>x.status==="Cuti").length;
+
+  total.innerText = DATA.length;
+  hadir.innerText = h;
+  cuti.innerText = c;
+}
+
+/* ================= RENDER LIST ================= */
 function render(){
 
   const k = search.value.toLowerCase();
@@ -152,42 +292,26 @@ function render(){
   list.innerHTML = DATA
     .filter(x => (x.nama||"").toLowerCase().includes(k))
     .map(x=>`
-      <div>
-        ${x.photo ? `<img src="${x.photo}" width="40">` : ""}
-        ${x.nama} - ${x.jawatan} (${x.status})
+      <div class="list-item">
+        ${x.photo ? `<img src="${x.photo}">` : ""}
+        <div>
+          <div style="font-weight:600">${x.nama}</div>
+          <small>${x.jawatan} • ${x.jabatan} • ${x.status}</small>
+        </div>
       </div>
     `).join("");
-}
-
-/* ================= CHART ================= */
-let c;
-
-function chart(){
-
-  const h = DATA.filter(x=>x.status==="Hadir").length;
-  const c1 = DATA.filter(x=>x.status==="Cuti").length;
-
-  if(c) c.destroy();
-
-  c = new Chart(document.getElementById("chart"),{
-    type:"bar",
-    data:{
-      labels:["Hadir","Cuti"],
-      datasets:[{data:[h,c1],backgroundColor:["#0f0","#f00"]}]
-    }
-  });
 }
 
 /* ================= ADD ================= */
 async function add(){
 
   const file = photo.files[0];
-  let img = "";
 
+  let img = "";
   if(file){
     img = await new Promise(r=>{
       const fr = new FileReader();
-      fr.onload = ()=>r(fr.result);
+      fr.onload=()=>r(fr.result);
       fr.readAsDataURL(file);
     });
   }
