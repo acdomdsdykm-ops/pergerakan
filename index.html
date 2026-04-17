@@ -3,23 +3,28 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MDS - Sistem Pergerakan Pegawai</title>
+<title>MDS HRMIS Mini System</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
+
+/* ================= BACKGROUND ================= */
 body{
   margin:0;
   font-family:Segoe UI;
-  background:#eef2f5;
+  background: linear-gradient(135deg,#0b3d2e,#145c43,#0f2f24);
+  color:#fff;
 }
 
-/* LOGIN */
+/* ================= LOGIN ================= */
 #loginBox{
   width:320px;
   margin:120px auto;
   background:white;
+  color:black;
   padding:20px;
   border-radius:12px;
-  box-shadow:0 5px 15px rgba(0,0,0,0.1);
 }
 #loginBox input{
   width:100%;
@@ -32,38 +37,37 @@ body{
   background:#0b3d2e;
   color:white;
   border:none;
-  border-radius:8px;
 }
 
-/* APP */
+/* ================= APP ================= */
 #app{display:none;}
 
+/* ================= TOPBAR ================= */
 .topbar{
-  background:#0b3d2e;
-  color:white;
-  padding:12px;
+  background:rgba(0,0,0,0.35);
+  backdrop-filter:blur(10px);
+  padding:15px;
   display:flex;
   justify-content:space-between;
   align-items:center;
-  flex-wrap:wrap;
-}
-.topbar button{
-  background:#c0392b;
-  color:white;
-  border:none;
-  padding:8px 12px;
-  border-radius:6px;
 }
 
-/* LAYOUT */
-.wrapper{display:flex;min-height:100vh;}
+#dateTime{
+  font-size:20px;
+  font-weight:bold;
+  color:#00ff99;
+  text-shadow:0 0 10px #00ff99;
+}
 
+/* ================= LAYOUT ================= */
+.wrapper{display:flex;}
+
+/* SIDEBAR */
 .sidebar{
-  width:230px;
-  background:#0b3d2e;
-  color:white;
+  width:220px;
+  background:rgba(0,0,0,0.25);
+  min-height:100vh;
 }
-
 .sidebar button{
   width:100%;
   padding:12px;
@@ -71,30 +75,28 @@ body{
   border:none;
   color:white;
   text-align:left;
-  cursor:pointer;
 }
-.sidebar button:hover{background:rgba(255,255,255,0.1);}
 
+/* MAIN */
 .main{flex:1;padding:15px;}
 
+/* PANEL */
 .panel{
-  background:white;
+  background:rgba(255,255,255,0.08);
   padding:15px;
-  margin-bottom:15px;
   border-radius:10px;
-  box-shadow:0 2px 6px rgba(0,0,0,0.08);
+  margin-bottom:15px;
 }
 
+/* CARD */
 .card{
   display:flex;
   gap:10px;
   padding:10px;
-  border-bottom:1px solid #eee;
-}
-.card img{
-  width:45px;height:45px;border-radius:50%;
+  border-bottom:1px solid rgba(255,255,255,0.2);
 }
 
+/* INPUT */
 input{
   padding:8px;
   margin:5px 0;
@@ -106,6 +108,7 @@ input{
   .wrapper{flex-direction:column;}
   .sidebar{width:100%;}
 }
+
 </style>
 </head>
 
@@ -113,10 +116,10 @@ input{
 
 <!-- ================= LOGIN ================= -->
 <div id="loginBox">
-  <h3>🔐 Login Sistem MDS</h3>
-  <input id="u" placeholder="Username">
-  <input id="p" type="password" placeholder="Password">
-  <button onclick="login()">Login</button>
+<h3>Login MDS HRMIS</h3>
+<input id="u" placeholder="Username">
+<input id="p" type="password" placeholder="Password">
+<button onclick="login()">Login</button>
 </div>
 
 <!-- ================= APP ================= -->
@@ -125,7 +128,7 @@ input{
 <div class="topbar">
   <div>
     <b>MAJLIS DAERAH SIMUNJAN</b><br>
-    <span id="dateTime" style="font-size:18px;font-weight:normal;"></span>
+    <span id="dateTime"></span>
   </div>
   <button onclick="logout()">Logoff</button>
 </div>
@@ -134,72 +137,86 @@ input{
 
 <!-- SIDEBAR -->
 <div class="sidebar">
-  <button onclick="show('summary')">📊 Summary Jabatan</button>
-  <button onclick="show('search')">🔍 Carian</button>
-  <button onclick="show('add')">➕ Tambah Pegawai</button>
-  <button onclick="show('list')">🏢 Senarai Jabatan</button>
+<button onclick="show('kpi')">📊 KPI Dashboard</button>
+<button onclick="show('search')">🔍 Carian</button>
+<button onclick="show('add')">➕ Tambah</button>
+<button onclick="show('list')">🏢 Jabatan</button>
+<button onclick="generatePDF()">🗂️ PDF Report</button>
 </div>
 
 <!-- MAIN -->
 <div class="main">
 
-<!-- SUMMARY -->
-<div id="summary" class="panel section">
-  <h3>📊 Summary Jabatan</h3>
-  <div id="summaryBox"></div>
+<!-- KPI -->
+<div id="kpi" class="panel section">
+<h3>📊 KPI Dashboard</h3>
+
+<div style="display:flex;gap:10px;flex-wrap:wrap;">
+<div class="panel">Total: <span id="total"></span></div>
+<div class="panel">Hadir: <span id="hadir"></span></div>
+<div class="panel">Cuti: <span id="cuti"></span></div>
+</div>
+
+<canvas id="chart"></canvas>
+
+<div class="panel">
+🌦️ Cuaca Simunjan: <span id="weather"></span>
+</div>
+
 </div>
 
 <!-- SEARCH -->
 <div id="search" class="panel section" style="display:none;">
-  <h3>🔍 Carian Pegawai</h3>
-  <input id="searchInput" placeholder="Cari nama / jawatan...">
-  <div id="searchResult"></div>
+<h3>🔍 Carian</h3>
+<input id="searchInput">
+<div id="searchResult"></div>
 </div>
 
 <!-- ADD -->
 <div id="add" class="panel section" style="display:none;">
-  <h3>➕ Tambah Pegawai</h3>
+<h3>➕ Tambah Pegawai</h3>
 
-  <input id="nama" placeholder="Nama">
-  <input id="jawatan" placeholder="Jawatan">
-  <input id="jabatan" placeholder="Jabatan">
-  <input id="status" placeholder="Status">
+<input id="nama" placeholder="Nama">
+<input id="jawatan" placeholder="Jawatan">
+<input id="jabatan" placeholder="Jabatan">
+<input id="status" placeholder="Hadir / Cuti">
 
-  <button onclick="add()">Simpan</button>
+<button onclick="add()">Simpan</button>
 </div>
 
 <!-- LIST -->
 <div id="list" class="panel section" style="display:none;">
-  <h3>🏢 Senarai Mengikut Jabatan</h3>
-  <div id="listBox"></div>
+<h3>🏢 Senarai Jabatan</h3>
+<div id="listBox"></div>
 </div>
 
-</div>
 </div>
 </div>
 
 <script>
 
-/* ================= DATA SIMULASI (boleh connect Apps Script nanti) ================= */
+/* ================= DATA ================= */
 let dataGlobal = [
-  {nama:"Ali", jawatan:"Pegawai", jabatan:"Pentadbiran", status:"Hadir"},
-  {nama:"Siti", jawatan:"Pembantu", jabatan:"Kewangan", status:"Cuti"},
-  {nama:"Rahman", jawatan:"Pegawai", jabatan:"Pentadbiran", status:"Hadir"}
+{nama:"Ali",jawatan:"Pegawai",jabatan:"Pentadbiran",status:"Hadir"},
+{nama:"Siti",jawatan:"Pembantu",jabatan:"Kewangan",status:"Cuti"}
 ];
+
+/* ================= CLOCK ================= */
+function updateTime(){
+  let d = new Date();
+  let days=["Ahad","Isnin","Selasa","Rabu","Khamis","Jumaat","Sabtu"];
+  document.getElementById("dateTime").innerHTML =
+  days[d.getDay()]+" | "+d.toLocaleString();
+}
+setInterval(updateTime,1000);
+updateTime();
 
 /* ================= LOGIN ================= */
 function login(){
-  let u = document.getElementById("u").value;
-  let p = document.getElementById("p").value;
-
-  if(u && p){
-    sessionStorage.setItem("login","1");
-    document.getElementById("loginBox").style.display="none";
-    document.getElementById("app").style.display="block";
-    load();
-  } else {
-    alert("Isi login");
-  }
+  sessionStorage.setItem("login","1");
+  loginBox.style.display="none";
+  app.style.display="block";
+  load();
 }
 
 /* ================= LOGOUT ================= */
@@ -210,117 +227,89 @@ function logout(){
 
 /* ================= NAV ================= */
 function show(id){
-  document.querySelectorAll('.section').forEach(s=>s.style.display="none");
+  document.querySelectorAll('.section').forEach(e=>e.style.display="none");
   document.getElementById(id).style.display="block";
 }
 
 /* ================= LOAD ================= */
 function load(){
-  renderSummary();
+  kpi();
   renderList();
-  renderSearch();
+  weather();
 }
 
-/* ================= SUMMARY ================= */
-function renderSummary(){
+/* ================= KPI ================= */
+function kpi(){
 
-  let group={};
+let total=dataGlobal.length;
+let hadir=dataGlobal.filter(d=>d.status==="Hadir").length;
+let cuti=dataGlobal.filter(d=>d.status==="Cuti").length;
 
-  dataGlobal.forEach(d=>{
-    group[d.jabatan]=(group[d.jabatan]||0)+1;
-  });
+document.getElementById("total").innerText=total;
+document.getElementById("hadir").innerText=hadir;
+document.getElementById("cuti").innerText=cuti;
 
-  let html="";
-  for(let j in group){
-    html+=`<div>🏢 ${j}: <b>${group[j]}</b></div>`;
-  }
+new Chart(document.getElementById("chart"),{
+type:"bar",
+data:{
+labels:["Hadir","Cuti"],
+datasets:[{data:[hadir,cuti],backgroundColor:["#00ff99","#ff4d4d"]}]
+}
+});
+}
 
-  summaryBox.innerHTML=html;
+/* ================= WEATHER ================= */
+async function weather(){
+let res=await fetch("https://api.open-meteo.com/v1/forecast?latitude=1.25&longitude=110.55&current_weather=true");
+let d=await res.json();
+document.getElementById("weather").innerText=d.current_weather.temperature+"°C";
 }
 
 /* ================= LIST ================= */
 function renderList(){
+let g={};
+dataGlobal.forEach(d=>{
+if(!g[d.jabatan])g[d.jabatan]=[];
+g[d.jabatan].push(d);
+});
 
-  let group={};
+let html="";
+for(let j in g){
+html+="<h3>"+j+"</h3>";
+g[j].forEach(p=>{
+html+=`<div class="card">${p.nama} - ${p.jawatan} (${p.status})</div>`;
+});
+}
 
-  dataGlobal.forEach(d=>{
-    if(!group[d.jabatan]) group[d.jabatan]=[];
-    group[d.jabatan].push(d);
-  });
-
-  let html="";
-
-  for(let j in group){
-
-    html+=`<h3>🏢 ${j}</h3>`;
-
-    group[j].forEach(p=>{
-      html+=`
-      <div class="card">
-        <img src="https://via.placeholder.com/45">
-        <div>
-          <b>${p.nama}</b><br>
-          ${p.jawatan} | ${p.status}
-        </div>
-      </div>`;
-    });
-  }
-
-  listBox.innerHTML=html;
+listBox.innerHTML=html;
 }
 
 /* ================= SEARCH ================= */
-function renderSearch(){
+searchInput.onkeyup=function(){
+let k=this.value.toLowerCase();
+let f=dataGlobal.filter(d=>d.nama.toLowerCase().includes(k));
 
-  searchInput.onkeyup=function(){
-
-    let k=this.value.toLowerCase();
-
-    let f=dataGlobal.filter(d=>
-      d.nama.toLowerCase().includes(k) ||
-      d.jawatan.toLowerCase().includes(k)
-    );
-
-    let html="";
-
-    f.forEach(p=>{
-      html+=`
-      <div class="card">
-        <img src="https://via.placeholder.com/45">
-        <div>
-          <b>${p.nama}</b><br>
-          ${p.jawatan} | ${p.status}
-        </div>
-      </div>`;
-    });
-
-    searchResult.innerHTML=html;
-  };
+let html="";
+f.forEach(p=>{
+html+=`<div class="card">${p.nama} - ${p.jawatan}</div>`;
+});
+searchResult.innerHTML=html;
 }
 
 /* ================= ADD ================= */
 function add(){
-
-  dataGlobal.push({
-    nama:nama.value,
-    jawatan:jawatan.value,
-    jabatan:jabatan.value,
-    status:status.value
-  });
-
-  nama.value="";
-  jawatan.value="";
-  jabatan.value="";
-  status.value="";
-
-  load();
+dataGlobal.push({
+nama:nama.value,
+jawatan:jawatan.value,
+jabatan:jabatan.value,
+status:status.value
+});
+load();
 }
 
-/* ================= INIT ================= */
-if(sessionStorage.getItem("login")==="1"){
-  loginBox.style.display="none";
-  app.style.display="block";
-  load();
+/* ================= PDF (SIMPLIFIED LINK READY) ================= */
+function generatePDF(){
+window.open("YOUR_APPS_SCRIPT_URL?action=pdf");
 }
 
 </script>
