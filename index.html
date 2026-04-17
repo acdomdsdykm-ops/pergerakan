@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HRMIS MDS FINAL V3</title>
+<title>HRMIS MDS V4 STABLE</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -32,11 +32,10 @@ body{
 
 /* ===== TOPBAR ===== */
 .topbar{
-  background:rgba(0,0,0,0.35);
-  padding:15px;
   display:flex;
   justify-content:space-between;
-  align-items:center;
+  padding:15px;
+  background:rgba(0,0,0,0.35);
 }
 
 /* ===== LAYOUT ===== */
@@ -56,9 +55,9 @@ body{
   width:100%;
   padding:10px;
   margin:5px 0;
-  border:none;
   background:#0b3d2e;
   color:white;
+  border:none;
   cursor:pointer;
 }
 
@@ -78,8 +77,8 @@ body{
 
 /* INPUT */
 input{
-  padding:8px;
   width:100%;
+  padding:8px;
   margin:5px 0;
 }
 
@@ -106,7 +105,7 @@ input{
 <div id="app">
 
 <div class="topbar">
-<div>🏛️ MAJLIS DAERAH SIMUNJAN HRMIS</div>
+<div>🏛️ HRMIS MDS V4 STABLE</div>
 <button onclick="logout()">Logout</button>
 </div>
 
@@ -115,8 +114,8 @@ input{
 <!-- SIDEBAR -->
 <div class="sidebar">
 <button onclick="load()">📊 Dashboard</button>
-<button onclick="showAdd()">➕ Tambah Pegawai</button>
-<button onclick="load()">🔍 Refresh Data</button>
+<button onclick="toggleAdd()">➕ Tambah Pegawai</button>
+<button onclick="load()">🔄 Refresh</button>
 </div>
 
 <!-- MAIN -->
@@ -152,13 +151,14 @@ input{
 
 <script>
 
-/* ================= API ================= */
+/* ================= CONFIG ================= */
 const API = "https://script.google.com/macros/s/AKfycbwAM3w2O13dSP3__6zSbtFkZRPSUWOUIsYq_uYxsMwrhsAdwhK0ERimU2vA2vTZP_bq3Q/exec";
 
-/* ================= SAFE API CALL ================= */
-async function api(payload){
+/* ================= SAFE API (ANTI NETWORK ERROR) ================= */
+async function api(payload, retry=2){
 
   try{
+
     const res = await fetch(API,{
       method:"POST",
       headers:{
@@ -167,10 +167,19 @@ async function api(payload){
       body: JSON.stringify(payload)
     });
 
+    if(!res.ok) throw new Error("HTTP "+res.status);
+
     return await res.json();
 
   }catch(err){
-    alert("API ERROR: "+err);
+
+    console.log("API FAIL:",err);
+
+    if(retry>0){
+      return await api(payload,retry-1);
+    }
+
+    alert("Sistem API gagal sambung. Sila semak Apps Script deploy.");
   }
 }
 
@@ -197,7 +206,6 @@ async function login(){
 async function load(){
 
   let d = await api({action:"getPegawai"});
-
   if(!d) return;
 
   let html="";
@@ -206,13 +214,13 @@ async function load(){
   d.forEach(x=>{
 
     html+=`
-      <div style="padding:5px;border-bottom:1px solid #ccc">
+      <div style="padding:6px;border-bottom:1px solid #ccc">
         ${x.nama} - ${x.jawatan} (${x.status})
       </div>
     `;
 
-    if(x.status=="Hadir") hadir++;
-    if(x.status=="Cuti") cuti++;
+    if(x.status==="Hadir") hadir++;
+    if(x.status==="Cuti") cuti++;
   });
 
   list.innerHTML = html;
@@ -236,7 +244,7 @@ function renderChart(hadir,cuti){
 
 }
 
-/* ================= ADD ================= */
+/* ================= ADD PEGAWAI ================= */
 async function add(){
 
   await api({
@@ -248,17 +256,17 @@ async function add(){
     catatan:catatan.value
   });
 
-  showAdd();
+  toggleAdd();
   load();
 }
 
-/* ================= UI ================= */
-function showAdd(){
+/* ================= UI TOGGLE ================= */
+function toggleAdd(){
   addBox.style.display =
   addBox.style.display==="none" ? "block":"none";
 }
 
-/* ================= LOGOUT FIX (STABLE) ================= */
+/* ================= LOGOUT (FULL RESET FIX) ================= */
 function logout(){
   sessionStorage.clear();
   localStorage.clear();
