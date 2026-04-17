@@ -161,13 +161,16 @@ input,select{
 
 <script>
 
-/* ================= CONFIG ================= */
 const API = "https://script.google.com/macros/s/AKfycbzDQr7Dw1x_7VkDLbN8RY5pb2yGTt751uyJA1abcaQJdmNlgDWRXNkD3iW_WMwd6qfuGQ/exec";
 
-/* ================= SAFE API ================= */
+let DATA = [];
+let chartInstance;
+
+/* ================= API SAFE ================= */
 async function api(payload){
 
   try{
+
     const res = await fetch(API,{
       method:"POST",
       headers:{ "Content-Type":"application/json" },
@@ -176,7 +179,13 @@ async function api(payload){
 
     if(!res.ok) throw new Error("HTTP "+res.status);
 
-    return await res.json();
+    const text = await res.text();
+
+    try{
+      return JSON.parse(text);
+    }catch(e){
+      throw new Error("Invalid JSON response");
+    }
 
   }catch(err){
     console.log(err);
@@ -184,39 +193,23 @@ async function api(payload){
   }
 }
 
-/* ================= DASHBOARD ================= */
-async function loadDashboard(){
-
-  const d = await api({action:"getDashboard"});
-
-  document.getElementById("kpi").innerHTML = `
-    Total: ${d.total} <br>
-    Hadir: ${d.hadir} <br>
-    Cuti: ${d.cuti}
-  `;
-}
-
 /* ================= LOGIN ================= */
 async function login(){
 
   const r = await api({
     action:"login",
-    username:u.value,
-    password:p.value
+    username: document.getElementById("u").value,
+    password: document.getElementById("p").value
   });
 
-  if(r.status==="ok"){
-    loginBox.style.display="none";
-    app.style.display="block";
-    loadDashboard();
+  if(r && r.status==="ok"){
+    document.getElementById("login").style.display="none";
+    document.getElementById("app").style.display="block";
+    load();
+  }else{
+    alert("Login gagal");
   }
 }
-
-/* ================= LOGOUT ================= */
-function logout(){
-  location.reload();
-}
-</script>
 
 /* ================= LOAD DATA ================= */
 async function load(){
@@ -225,14 +218,15 @@ async function load(){
   if(!d) return;
 
   DATA = d;
+
   renderList();
   renderChart();
 }
 
-/* ================= RENDER LIST ================= */
+/* ================= LIST ================= */
 function renderList(){
 
-  const keyword = (search.value || "").toLowerCase();
+  const keyword = (document.getElementById("search").value || "").toLowerCase();
 
   let html = "";
 
@@ -247,7 +241,7 @@ function renderList(){
     `;
   });
 
-  list.innerHTML = html;
+  document.getElementById("list").innerHTML = html;
 }
 
 /* ================= CHART ================= */
@@ -258,7 +252,9 @@ function renderChart(){
 
   if(chartInstance) chartInstance.destroy();
 
-  chartInstance = new Chart(chart,{
+  const ctx = document.getElementById("chart");
+
+  chartInstance = new Chart(ctx,{
     type:"bar",
     data:{
       labels:["Hadir","Cuti"],
@@ -270,7 +266,7 @@ function renderChart(){
   });
 }
 
-/* ================= TOGGLE FORM ================= */
+/* ================= TOGGLE ================= */
 function toggleForm(){
   const f = document.getElementById("form");
   f.style.display = (f.style.display==="block") ? "none":"block";
@@ -281,11 +277,11 @@ async function add(){
 
   await api({
     action:"addPegawai",
-    nama:nama.value,
-    jawatan:jawatan.value,
-    jabatan:jabatan.value,
-    status:status.value,
-    catatan:catatan.value
+    nama: document.getElementById("nama").value,
+    jawatan: document.getElementById("jawatan").value,
+    jabatan: document.getElementById("jabatan").value,
+    status: document.getElementById("status").value,
+    catatan: document.getElementById("catatan").value
   });
 
   toggleForm();
@@ -294,8 +290,6 @@ async function add(){
 
 /* ================= LOGOUT ================= */
 function logout(){
-  sessionStorage.clear();
-  localStorage.clear();
   location.reload();
 }
 
