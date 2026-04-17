@@ -3,108 +3,47 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MDS - Sistem Pergerakan Pegawai</title>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+<title>MDS Dashboard</title>
 
 <style>
-
-/* =========================
-   BASE (GOV STYLE THEME)
-========================= */
 body{
   margin:0;
-  font-family: "Segoe UI", sans-serif;
+  font-family:Segoe UI;
   background:#f4f6f9;
-  color:#1f2d3d;
 }
-
-/* SIDEBAR */
-.sidebar{
-  position:fixed;
-  top:0;left:0;
-  width:240px;
-  height:100vh;
+.header{
   background:#0b3d2e;
   color:white;
-  padding:20px;
-}
-
-.sidebar h2{
-  font-size:16px;
-  margin-bottom:20px;
-}
-
-.menu{
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-}
-
-.menu button{
-  background:rgba(255,255,255,0.1);
-  border:none;
-  color:white;
-  padding:10px;
-  border-radius:8px;
-  text-align:left;
-}
-
-/* MAIN */
-.main{
-  margin-left:260px;
-  padding:20px;
-}
-
-/* TOP BAR */
-.topbar{
+  padding:15px;
   display:flex;
   justify-content:space-between;
   align-items:center;
-  background:white;
-  padding:15px;
-  border-radius:10px;
-  box-shadow:0 2px 8px rgba(0,0,0,0.05);
 }
+.container{padding:15px;}
 
-/* KPI */
-.kpi{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:15px;
-  margin-top:15px;
-}
-
-.card{
-  background:white;
-  padding:15px;
-  border-radius:10px;
-  box-shadow:0 2px 8px rgba(0,0,0,0.05);
-  text-align:center;
-}
-
-.card h3{
-  margin:5px 0;
-}
-
-/* FILTER */
 .panel{
   background:white;
   padding:15px;
   border-radius:10px;
-  margin-top:15px;
+  margin-bottom:15px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.1);
 }
 
-/* LIST */
-.list{
-  background:white;
-  padding:10px;
-  border-radius:10px;
+input,select,button{
+  padding:8px;
+  margin:5px;
+  border-radius:8px;
+  border:1px solid #ccc;
 }
 
-.item{
+button{
+  cursor:pointer;
+  background:#0b3d2e;
+  color:white;
+  border:none;
+}
+
+.card{
   display:flex;
   align-items:center;
   gap:10px;
@@ -112,242 +51,181 @@ body{
   border-bottom:1px solid #eee;
 }
 
-.item img{
-  width:45px;
-  height:45px;
+.card img{
+  width:40px;
+  height:40px;
   border-radius:50%;
-}
-
-/* BUTTON */
-button{
-  cursor:pointer;
 }
 
 /* MOBILE */
 @media(max-width:768px){
-  .sidebar{
-    position:relative;
-    width:100%;
-    height:auto;
-  }
-
-  .main{
-    margin-left:0;
-  }
-
-  .kpi{
-    grid-template-columns:repeat(2,1fr);
-  }
-
-  .topbar{
+  .header{
     flex-direction:column;
-    gap:10px;
     text-align:center;
   }
 }
-
 </style>
 </head>
 
 <body>
 
-<!-- SIDEBAR -->
-<div class="sidebar">
-  <h2>🏛️ MDS SYSTEM</h2>
-  <div class="menu">
-    <button onclick="showSection('dashboard')">Dashboard</button>
-    <button onclick="showSection('data')">Pegawai</button>
-    <button onclick="showSection('report')">Laporan</button>
+<div class="header">
+  <div><b>MAJLIS DAERAH SIMUNJAN</b></div>
+  <div>
+    <button onclick="downloadPDF()">📄 PDF</button>
+    <button onclick="logout()">Logoff</button>
   </div>
 </div>
 
-<!-- MAIN -->
-<div class="main">
+<div class="container">
 
-<!-- TOPBAR -->
-<div class="topbar">
-  <div><b>Majlis Daerah Simunjan</b></div>
-  <button onclick="logout()" style="background:#c0392b;color:white;border:none;padding:8px 12px;border-radius:8px;">
-    Logoff
-  </button>
-</div>
-
-<!-- KPI DASHBOARD -->
-<div id="dashboard">
-
-<div class="kpi">
-  <div class="card">
-    <h3 id="total">0</h3>
-    <small>Jumlah Pegawai</small>
-  </div>
-  <div class="card">
-    <h3 id="hadir">0</h3>
-    <small>Hadir</small>
-  </div>
-  <div class="card">
-    <h3 id="cuti">0</h3>
-    <small>Cuti</small>
-  </div>
-  <div class="card">
-    <h3 id="tiada">0</h3>
-    <small>Tiada</small>
-  </div>
-</div>
-
+<!-- DASHBOARD SUMMARY -->
 <div class="panel">
-  <h3>📊 Graf Pergerakan</h3>
-  <canvas id="chart"></canvas>
+  <h3>📊 Summary Jabatan</h3>
+  <div id="summary"></div>
 </div>
 
-<div class="panel">
-  <h3>📅 Calendar</h3>
-  <div id="calendar"></div>
-</div>
-
-</div>
-
-<!-- FILTER + DATA -->
-<div id="data" style="display:none;">
-
+<!-- FILTER -->
 <div class="panel">
   <h3>🔍 Carian</h3>
-  <input id="search" placeholder="Cari nama / jawatan..." onkeyup="filterData()">
-
-  <select id="filterJabatan" onchange="filterData()">
-    <option value="">Semua Jabatan</option>
-  </select>
+  <input id="search" placeholder="Cari nama..." onkeyup="filter()">
 </div>
 
-<div class="panel list" id="list"></div>
+<!-- FORM -->
+<div class="panel">
+  <h3>Tambah Pegawai</h3>
+  <input id="nama" placeholder="Nama">
+  <input id="jawatan" placeholder="Jawatan">
+  <input id="jabatan" placeholder="Jabatan">
+  <input id="status" placeholder="Status">
+  <input type="file" id="file">
+  <button onclick="add()">Tambah</button>
+</div>
 
+<!-- LIST BY JABATAN -->
+<div class="panel">
+  <h3>🏢 Senarai Mengikut Jabatan</h3>
+  <div id="list"></div>
 </div>
 
 </div>
 
 <script>
 
-const API="https://script.google.com/macros/s/AKfycbzrCoKNBPCou3lbMBa4RYqb2r9Mhcqbn6W4M33K_Qfj4HBvPk7jaZJBhjFVG-4L3tl-HQ/exec";
-let session={}, rawData=[], chartInstance=null;
+const API="https://script.google.com/macros/s/AKfycbxGqBk7rG5FmDj_og7Icx2wrfW58JxZw7c7MaMcs0Hj3TOj0r4lMJykVNwsjy_6iO9SvQ/exec";
+let dataGlobal=[];
 
-// LOGIN SIMPLIFIED (optional integrate if needed)
+/* LOAD */
+async function load(){
+  let res=await fetch(API,{
+    method:"POST",
+    body:JSON.stringify({action:"getData"})
+  });
+
+  dataGlobal=await res.json();
+  render(dataGlobal);
+  summary(dataGlobal);
+}
+
+/* SUMMARY */
+function summary(data){
+  let group={};
+
+  data.forEach(d=>{
+    group[d.jabatan]=(group[d.jabatan]||0)+1;
+  });
+
+  let html="";
+  for(let j in group){
+    html+=`<div>${j}: <b>${group[j]}</b></div>`;
+  }
+
+  summary.innerHTML=html;
+}
+
+/* GROUP LIST */
+function render(data){
+  let group={};
+
+  data.forEach(d=>{
+    if(!group[d.jabatan]) group[d.jabatan]=[];
+    group[d.jabatan].push(d);
+  });
+
+  let html="";
+
+  for(let j in group){
+    html+=`<h4>🏢 ${j}</h4>`;
+
+    group[j].forEach(p=>{
+      html+=`
+      <div class="card">
+        <img src="${p.gambar_url}">
+        <div>
+          <b>${p.nama}</b><br>
+          ${p.jawatan} | ${p.status}
+        </div>
+      </div>`;
+    });
+  }
+
+  list.innerHTML=html;
+}
+
+/* FILTER */
+function filter(){
+  let k=search.value.toLowerCase();
+
+  let filtered=dataGlobal.filter(d=>
+    d.nama.toLowerCase().includes(k)
+  );
+
+  render(filtered);
+}
+
+/* ADD */
+async function add(){
+  let file=document.getElementById("file").files[0];
+  let base64="";
+
+  if(file){
+    base64=await toBase64(file);
+  }
+
+  await fetch(API,{
+    method:"POST",
+    body:JSON.stringify({
+      action:"add",
+      nama:nama.value,
+      jawatan:jawatan.value,
+      jabatan:jabatan.value,
+      status:status.value,
+      image_base64:base64
+    })
+  });
+
+  load();
+}
+
+/* PDF */
+function downloadPDF(){
+  window.open(API+"?action=pdf","_blank");
+}
+
+/* BASE64 */
+function toBase64(file){
+  return new Promise(res=>{
+    let r=new FileReader();
+    r.readAsDataURL(file);
+    r.onload=()=>res(r.result.split(',')[1]);
+  });
+}
+
+/* LOGOUT */
 function logout(){
   location.reload();
 }
 
-// NAV
-function showSection(sec){
-  dashboard.style.display="none";
-  data.style.display="none";
-  document.getElementById(sec).style.display="block";
-}
-
-// LOAD DATA
-async function load(){
-  let res=await fetch(API,{
-    method:"POST",
-    body:JSON.stringify({
-      action:"getData"
-    })
-  });
-
-  rawData = await res.json();
-
-  buildDashboard(rawData);
-  buildDropdown(rawData);
-  filterData();
-}
-
-// KPI
-function buildDashboard(data){
-  total.innerText=data.length;
-  hadir.innerText=data.filter(d=>d.status==="Hadir").length;
-  cuti.innerText=data.filter(d=>d.status==="Cuti").length;
-  tiada.innerText=data.filter(d=>d.status==="Tiada").length;
-
-  buildChart(data);
-  buildCalendar(data);
-}
-
-// FILTER
-function filterData(){
-  let k=search.value?.toLowerCase()||"";
-  let j=filterJabatan.value;
-
-  let f=rawData.filter(d=>{
-    return (d.nama.toLowerCase().includes(k) || d.jawatan.toLowerCase().includes(k))
-    && (j===""||d.jabatan===j);
-  });
-
-  renderList(f);
-}
-
-// LIST
-function renderList(data){
-  list.innerHTML="";
-  data.forEach(d=>{
-    list.innerHTML+=`
-    <div class="item">
-      <img src="${d.gambar_url}">
-      <div>
-        <b>${d.nama}</b><br>
-        <small>${d.jawatan} | ${d.jabatan}</small><br>
-        <span>${d.status}</span>
-      </div>
-    </div>`;
-  });
-}
-
-// DROPDOWN
-function buildDropdown(data){
-  let unique=[...new Set(data.map(d=>d.jabatan))];
-  filterJabatan.innerHTML='<option value="">Semua Jabatan</option>';
-
-  unique.forEach(j=>{
-    filterJabatan.innerHTML+=`<option value="${j}">${j}</option>`;
-  });
-}
-
-// CHART
-function buildChart(data){
-  let map={};
-
-  data.forEach(d=>{
-    let dt=new Date(d.tarikh).toLocaleDateString();
-    map[dt]=(map[dt]||0)+1;
-  });
-
-  if(chartInstance) chartInstance.destroy();
-
-  chartInstance=new Chart(chart,{
-    type:"line",
-    data:{
-      labels:Object.keys(map),
-      datasets:[{
-        label:"Pergerakan Pegawai",
-        data:Object.values(map),
-        borderColor:"#0b3d2e",
-        backgroundColor:"rgba(11,61,46,0.1)",
-        fill:true,
-        tension:0.3
-      }]
-    }
-  });
-}
-
-// CALENDAR
-function buildCalendar(data){
-  let events=data.map(d=>({
-    title:d.nama+" ("+d.status+")",
-    start:d.tarikh
-  }));
-
-  new FullCalendar.Calendar(calendar,{
-    initialView:"dayGridMonth",
-    events:events
-  }).render();
-}
-
-// INIT
 load();
 
 </script>
