@@ -70,11 +70,11 @@ input,select{
 
 <body>
 
-<div id="login">
+<div id="loginBox">
 <h3>LOGIN</h3>
 <input id="u" placeholder="Username">
 <input id="p" type="password" placeholder="Password">
-<button onclick="login()">Login</button>
+<button onclick="doLogin()">Login</button>
 </div>
 
 <div id="app">
@@ -153,7 +153,7 @@ async function api(payload){
 }
 
 /* ================= LOGIN ================= */
-async function login(){
+async function doLogin(){
 
   const r = await api({
     action:"login",
@@ -162,7 +162,7 @@ async function login(){
   });
 
   if(r.status==="ok"){
-    login.style.display="none";
+    document.getElementById("loginBox").style.display="none";
     app.style.display="block";
     load();
   }else{
