@@ -2,64 +2,141 @@
 <html lang="ms">
 <head>
 <meta charset="UTF-8">
-<title>Dashboard Pegawai</title>
+<title>Dashboard Pergerakan Pegawai - Majlis Daerah Simunjan</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
 body {
   margin:0;
-  font-family:Segoe UI;
-  background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
-  color:white;
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #0f3d2e, #145a32);
+  color:#fff;
 }
-.container { padding:20px; }
-.glass {
-  background:rgba(255,255,255,0.08);
+
+/* HEADER */
+.header {
+  display:flex;
+  align-items:center;
+  padding:15px 25px;
+  background: rgba(0,0,0,0.3);
+  backdrop-filter: blur(10px);
+}
+.header img {
+  width:60px;
+  margin-right:15px;
+}
+.header h1 {
+  margin:0;
+  font-size:20px;
+}
+
+/* CONTAINER */
+.container {
   padding:20px;
-  border-radius:15px;
-  backdrop-filter:blur(10px);
-  margin-bottom:20px;
+  max-width:1200px;
+  margin:auto;
 }
+
+/* GLASS CARD */
+.glass {
+  background: rgba(255,255,255,0.08);
+  border-radius:15px;
+  padding:20px;
+  margin-bottom:20px;
+  backdrop-filter: blur(10px);
+  box-shadow:0 8px 25px rgba(0,0,0,0.4);
+}
+
+/* LOGIN */
+.login {
+  max-width:300px;
+  margin:120px auto;
+  text-align:center;
+}
+input {
+  width:100%;
+  padding:10px;
+  margin:8px 0;
+  border:none;
+  border-radius:8px;
+}
+button {
+  padding:10px;
+  border:none;
+  border-radius:8px;
+  background:#d4af37;
+  color:black;
+  font-weight:bold;
+  cursor:pointer;
+}
+button:hover {
+  background:#f1c40f;
+}
+
+/* CARD LIST */
 .card {
   display:flex;
   align-items:center;
+  padding:12px;
+  border-radius:12px;
   margin-bottom:10px;
+  background:rgba(255,255,255,0.05);
 }
 .card img {
-  width:50px;height:50px;border-radius:50%;margin-right:10px;
+  width:55px;
+  height:55px;
+  border-radius:50%;
+  margin-right:15px;
+  object-fit:cover;
 }
-button { padding:8px 12px; border:none; border-radius:8px; background:#00c6ff; color:white; }
+.badge {
+  padding:5px 10px;
+  border-radius:20px;
+  font-size:12px;
+}
+.hadir{background:#2ecc71;}
+.cuti{background:#f39c12;}
+.tiada{background:#e74c3c;}
+
 .hidden{display:none;}
 </style>
 </head>
 
 <body>
+
+<!-- HEADER -->
+<div class="header">
+  <img src="LOGO_URL_DI_SINI">
+  <h1>Majlis Daerah Simunjan<br><small>Sistem Pergerakan Pegawai</small></h1>
+</div>
+
 <div class="container">
 
 <!-- LOGIN -->
-<div id="loginBox" class="glass">
-  <h2>Login</h2>
-  <input id="u" placeholder="Username"><br><br>
-  <input id="p" type="password" placeholder="Password"><br><br>
-  <button onclick="login()">Login</button>
+<div id="loginBox" class="glass login">
+  <h2>Login Sistem</h2>
+  <input id="username" placeholder="Username">
+  <input id="password" type="password" placeholder="Password">
+  <button onclick="login()">Masuk</button>
 </div>
 
 <!-- DASHBOARD -->
 <div id="app" class="hidden">
-
-<h1>📊 Dashboard Pegawai</h1>
 
 <div class="glass">
   <h3>Tambah Pegawai (Admin)</h3>
   <input id="nama" placeholder="Nama">
   <input id="jawatan" placeholder="Jawatan">
   <input id="jabatan" placeholder="Jabatan">
-  <input id="status" placeholder="Status">
+  <input id="status" placeholder="Status (Hadir/Cuti/Tiada)">
   <input id="gambar" placeholder="URL Gambar">
   <button onclick="add()">Tambah</button>
 </div>
 
 <div class="glass">
-  <h3>Statistik</h3>
+  <h3>Statistik Pegawai</h3>
   <canvas id="chart"></canvas>
 </div>
 
@@ -73,16 +150,16 @@ button { padding:8px 12px; border:none; border-radius:8px; background:#00c6ff; c
 
 <script>
 const API = "https://script.google.com/macros/s/AKfycbwpeAhkzHSI2w3jkye__venDhYgam0Zpjj_4u-Yct6byS5BZvDl0lS90YCNZg0VBVkFHQ/exec";
+let session={};
 
-let session = {};
-
+// LOGIN
 async function login(){
   let res = await fetch(API,{
     method:"POST",
     body:JSON.stringify({
       action:"login",
-      username:u.value,
-      password:p.value
+      username:username.value,
+      password:password.value
     })
   });
   let data = await res.json();
@@ -95,6 +172,7 @@ async function login(){
   } else alert("Login gagal");
 }
 
+// LOAD DATA
 async function load(){
   let res = await fetch(API,{
     method:"POST",
@@ -107,26 +185,33 @@ async function load(){
 
   let data = await res.json();
   render(data);
-  drawChart(data);
+  chart(data);
 }
 
+// PAPAR DATA
 function render(data){
   list.innerHTML="";
   data.forEach(d=>{
+    let statusClass=d.status.toLowerCase();
+
     list.innerHTML+=`
     <div class="card">
       <img src="${d.gambar_url}">
-      <div>
+      <div style="flex:1">
         <b>${d.nama}</b><br>
         ${d.jawatan} (${d.jabatan})<br>
-        ${d.status}
+        <span class="badge ${statusClass}">${d.status}</span>
+        <div>${d.catatan||""}</div>
       </div>
-      <button onclick="del('${d.id}')">X</button>
+      ${session.role==="admin" ? `<button onclick="del('${d.id}')">Padam</button>` : ""}
     </div>`;
   });
 }
 
+// TAMBAH
 async function add(){
+  if(session.role!=="admin") return alert("Admin sahaja");
+
   await fetch(API,{
     method:"POST",
     body:JSON.stringify({
@@ -141,6 +226,7 @@ async function add(){
   load();
 }
 
+// DELETE
 async function del(id){
   await fetch(API,{
     method:"POST",
@@ -149,19 +235,20 @@ async function del(id){
   load();
 }
 
-function drawChart(data){
-  let kira = {};
+// CHART
+function chart(data){
+  let kira={};
   data.forEach(d=>{
     kira[d.status]=(kira[d.status]||0)+1;
   });
 
-  new Chart(document.getElementById("chart"),{
-    type:'bar',
+  new Chart(chartCanvas=document.getElementById("chart"),{
+    type:"doughnut",
     data:{
       labels:Object.keys(kira),
       datasets:[{
         data:Object.values(kira),
-        backgroundColor:['#00c851','#ffbb33','#ff4444']
+        backgroundColor:["#2ecc71","#f39c12","#e74c3c"]
       }]
     }
   });
