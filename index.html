@@ -423,6 +423,47 @@ document.getElementById("staffView").innerHTML = html;
 /* ================= INIT ================= */
 show("dashboard");
 
+window.renderReport = function(){
+
+// kalau belum ada data report, buat kosong
+if(!reports) reports = {};
+
+// isi dropdown date
+let dates = Object.keys(reports).sort().reverse();
+filterDate.innerHTML =
+`<option value="all">All Date</option>` +
+dates.map(d=>`<option value="${d}">${d}</option>`).join("");
+
+// isi dropdown dept dari staff current
+let depts = [...new Set(staff.map(s=>s.dept))];
+
+filterDept.innerHTML =
+`<option value="all">All Dept</option>` +
+depts.map(d=>`<option value="${d}">${d}</option>`).join("");
+
+// filter logic
+let date = filterDate.value || "all";
+let dept = filterDept.value || "all";
+
+let data = (date==="all")
+? staff
+: (reports[date] ? JSON.parse(reports[date].data || "[]") : []);
+
+if(dept !== "all"){
+data = data.filter(s=>s.dept === dept);
+}
+
+reportBody.innerHTML = data.map(s=>`
+<tr>
+<td>${s.name}</td>
+<td>${s.job}</td>
+<td>${s.dept}</td>
+<td>${s.date || "-"}</td>
+<td>${s.status}</td>
+</tr>
+`).join("");
+};
+
 </script>
 
 </body>
