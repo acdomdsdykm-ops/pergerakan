@@ -3,170 +3,24 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HR System Pro Full</title>
+<title>HR System Cloud FIXED</title>
 
 <style>
-:root{
---bg:#0b1220;
---panel:#111827;
---panel2:#0f172a;
---blue:#3b82f6;
---green:#22c55e;
---yellow:#f59e0b;
---red:#ef4444;
---text:#e5e7eb;
-}
-
-*{box-sizing:border-box;font-family:system-ui;}
-
-body{
-margin:0;
-background:var(--bg);
-color:var(--text);
-}
-
-/* LOGIN */
-#loginPage{
-height:100vh;
-display:flex;
-flex-direction:column;
-justify-content:center;
-align-items:center;
-gap:10px;
-background:radial-gradient(circle,#1e293b,#0b1220);
-}
-
-input,select,button{
-width:260px;
-padding:10px;
-border:none;
-border-radius:10px;
-background:var(--panel);
-color:white;
-outline:none;
-}
-
-button{
-background:var(--blue);
-cursor:pointer;
-font-weight:600;
-}
-button:hover{opacity:0.85;}
-
-/* LAYOUT */
-.main{display:none;height:100vh;}
-.container{display:flex;height:100vh;}
-
-/* SIDEBAR */
-.sidebar{
-width:230px;
-background:var(--panel2);
-padding:15px;
-}
-
-.menu{
-padding:12px;
-border-radius:10px;
-cursor:pointer;
-margin-bottom:8px;
-}
-.menu:hover{background:#1f2937;}
-.menu.active{background:var(--blue);}
-
-/* PAGE */
-.page{
-flex:1;
-padding:20px;
-overflow:auto;
-display:none;
-}
-
-/* KPI */
-.kpi-grid{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
-gap:12px;
-margin-top:10px;
-}
-
-.kpi{
-background:var(--panel);
-padding:15px;
-border-radius:14px;
-text-align:center;
-}
-
-/* STAFF */
-.staff-card{
-display:flex;
-justify-content:space-between;
-align-items:center;
-background:var(--panel);
-padding:14px;
-border-radius:14px;
-margin-bottom:10px;
-}
-
-.left{display:flex;gap:12px;align-items:center;}
-
-.avatar{
-width:48px;height:48px;border-radius:50%;
-object-fit:cover;border:2px solid var(--blue);
-}
-
-.status{
-font-size:11px;
-padding:5px 10px;
-border-radius:999px;
-cursor:pointer;
-display:inline-block;
-margin-top:4px;
-}
-
-.hadir{background:var(--green);}
-.cuti{background:var(--yellow);color:black;}
-.tiada{background:var(--red);}
-.urusan{background:var(--blue);}
-
-.actions button{
-width:32px;height:32px;
-margin-left:5px;
-border:none;
-border-radius:8px;
-cursor:pointer;
-}
-
-.edit{background:var(--blue);}
-.delete{background:var(--red);}
-
-/* TABLE */
-table{
-width:100%;
-border-collapse:collapse;
-background:var(--panel);
-border-radius:12px;
-overflow:hidden;
-}
-
-th,td{
-padding:12px;
-border-bottom:1px solid #1f2937;
-font-size:14px;
-}
-
-th{
-background:#1f2937;
-text-align:left;
-}
-
-.filters{
-display:flex;
-gap:10px;
-flex-wrap:wrap;
-margin-bottom:12px;
-}
-
-.small{opacity:0.7;font-size:13px;}
+body{margin:0;font-family:system-ui;background:#0b1220;color:#e5e7eb}
+input,select,button{padding:10px;width:260px;margin:5px;border-radius:10px;border:none}
+button{background:#3b82f6;color:white;cursor:pointer}
+.main{display:none}
+.container{display:flex;height:100vh}
+.sidebar{width:220px;background:#111827;padding:10px}
+.menu{padding:10px;cursor:pointer;border-radius:8px;margin-bottom:5px}
+.menu:hover{background:#1f2937}
+.page{display:none;padding:15px;flex:1;overflow:auto}
+.staff-card{background:#111827;padding:10px;margin:8px;border-radius:10px}
+.status{padding:5px 10px;border-radius:20px;cursor:pointer;display:inline-block}
+.hadir{background:#22c55e}
+.cuti{background:#f59e0b;color:black}
+.tiada{background:#ef4444}
+.urusan{background:#3b82f6}
 </style>
 </head>
 
@@ -174,52 +28,40 @@ margin-bottom:12px;
 
 <!-- LOGIN -->
 <div id="loginPage">
-<h2>HR SYSTEM PRO</h2>
+<h2>LOGIN HR</h2>
 <input id="user" placeholder="username">
 <input id="pass" type="password" placeholder="password">
-<button onclick="login()">Login</button>
+<button id="loginBtn">Login</button>
 </div>
 
 <!-- MAIN -->
 <div class="main">
 <div class="container">
 
-<!-- SIDEBAR -->
 <div class="sidebar">
-<div class="menu active" onclick="show('dashboard',this)">Dashboard</div>
-<div class="menu" onclick="show('staff',this)">Staff</div>
-<div class="menu" onclick="show('add',this)">Add Staff</div>
-<div class="menu" onclick="show('report',this)">Report</div>
+<div class="menu" onclick="show('dashboard')">Dashboard</div>
+<div class="menu" onclick="show('staff')">Staff</div>
+<div class="menu" onclick="show('add')">Add Staff</div>
 </div>
 
 <!-- DASHBOARD -->
 <div class="page" id="dashboard">
 <h2>Dashboard</h2>
-<div class="small" id="clock"></div>
-
-<div class="kpi-grid">
-<div class="kpi">Total <h3 id="total">0</h3></div>
-<div class="kpi">Hadir <h3 id="hadir">0</h3></div>
-<div class="kpi">Cuti <h3 id="cuti">0</h3></div>
-<div class="kpi">Tiada <h3 id="tiada">0</h3></div>
-<div class="kpi">Urusan <h3 id="urusan">0</h3></div>
-</div>
+<h3 id="total">0</h3>
 </div>
 
 <!-- STAFF -->
 <div class="page" id="staff">
-<input id="search" placeholder="Search nama..." oninput="render()">
+<input id="search" placeholder="Search..." oninput="render()">
 <div id="staffView"></div>
 </div>
 
 <!-- ADD -->
 <div class="page" id="add">
-<h2>Add / Edit Staff</h2>
-
+<h2>Add Staff</h2>
 <input id="name" placeholder="Nama">
 <input id="job" placeholder="Jawatan">
 <input id="dept" placeholder="Bahagian">
-<input type="file" id="photo">
 
 <select id="status">
 <option>Hadir</option>
@@ -231,120 +73,67 @@ margin-bottom:12px;
 <button onclick="saveStaff()">Simpan</button>
 </div>
 
-<!-- REPORT -->
-<div class="page" id="report">
-<h2>Report</h2>
-
-<div class="filters">
-<select id="filterDate" onchange="renderReport()"></select>
-<select id="filterDept" onchange="renderReport()"></select>
-</div>
-
-<table>
-<thead>
-<tr>
-<th>Nama</th>
-<th>Jawatan</th>
-<th>Bahagian</th>
-<th>Tarikh</th>
-<th>Status</th>
-</tr>
-</thead>
-<tbody id="reportBody"></tbody>
-</table>
-</div>
-
 </div>
 </div>
 
 <script>
 
-const API = "https://script.google.com/macros/s/AKfycbyUiKO-L6GrTQOla6ROgYElHM8iL26I-JCCurbxNyQ3yQLSifB4V6jNn5ZWOL7tRTWnYQ/exec";
+const API = "PASTE_WEB_APP_URL_HERE";
 
 let staff = [];
-let reports = {};
-let editId = null;
 
-async function loadStaff(){
-  const res = await fetch(API,{
-    method:"POST",
-    body:JSON.stringify({action:"getStaff"})
-  });
+/* LOGIN (FIXED GLOBAL) */
+window.login = function(){
+const u = document.getElementById("user").value;
+const p = document.getElementById("pass").value;
 
-  staff = await res.json();
-  render();
-}
-
-/* LOGIN */
-function login(){
-const user = document.getElementById("user");
-const pass = document.getElementById("pass");
-
-if(user.value==="admin" && pass.value==="1234"){
+if(u==="admin" && p==="1234"){
 document.getElementById("loginPage").style.display="none";
 document.querySelector(".main").style.display="flex";
 show("dashboard");
-
-loadStaff(); // 🔥 penting
+loadStaff();
 }else{
-alert("Login salah");
+alert("Salah login");
 }
 }
+
+/* attach button safely */
+document.getElementById("loginBtn").addEventListener("click", login);
+
 /* NAV */
-function show(id,el){
+window.show = function(id){
 document.querySelectorAll(".page").forEach(p=>p.style.display="none");
 document.getElementById(id).style.display="block";
-
-document.querySelectorAll(".menu").forEach(m=>m.classList.remove("active"));
-if(el) el.classList.add("active");
-
 render();
-if(id==="report") renderReport();
 }
 
-/* SAVE STAFF (FIXED ROOT) */
-async function saveStaff(){
-
-const name = document.getElementById("name").value;
-const job = document.getElementById("job").value;
-const dept = document.getElementById("dept").value;
-const status = document.getElementById("status").value;
-const photoEl = document.getElementById("photo");
-
-if(!name.trim()){
-alert("Nama wajib isi");
-return;
-}
-
-let photo = "https://i.pravatar.cc/150";
-
-if(photoEl.files[0]){
-const reader = new FileReader();
-
-reader.onload = async function(){
-photo = reader.result;
-
-await fetch(API,{
+/* LOAD */
+async function loadStaff(){
+try{
+const res = await fetch(API,{
 method:"POST",
-body:JSON.stringify({
-action:"addStaff",
-name,job,dept,status,photo
-})
+body:JSON.stringify({action:"getStaff"})
 });
-
-loadStaff();
-show("staff");
-};
-
-reader.readAsDataURL(photoEl.files[0]);
-return;
+staff = await res.json();
+render();
+}catch(e){
+alert("API error / Google Script belum deploy");
+console.log(e);
 }
+}
+
+/* SAVE */
+window.saveStaff = async function(){
 
 await fetch(API,{
 method:"POST",
 body:JSON.stringify({
 action:"addStaff",
-name,job,dept,status,photo
+name:name.value,
+job:job.value,
+dept:dept.value,
+status:status.value,
+photo:"https://i.pravatar.cc/150"
 })
 });
 
@@ -353,40 +142,19 @@ show("staff");
 }
 
 /* DELETE */
-async function del(id){
-if(!confirm("Padam staff ini?")) return;
-
+window.del = async function(id){
 await fetch(API,{
 method:"POST",
-body:JSON.stringify({
-action:"deleteStaff",
-id
-})
+body:JSON.stringify({action:"deleteStaff",id})
 });
-
 loadStaff();
 }
 
-/* EDIT */
-function edit(id){
+/* STATUS TOGGLE */
+window.toggleStatus = async function(id){
+
 let s = staff.find(x=>x.id===id);
-if(!s) return;
-
-document.getElementById("name").value = s.name;
-document.getElementById("job").value = s.job;
-document.getElementById("dept").value = s.dept;
-document.getElementById("status").value = s.status;
-
-editId = id;
-show("add");
-}
-
-/* STATUS */
-async function toggleStatus(id){
-
 let order=["Hadir","Cuti","Tiada","Urusan Rasmi Di Luar"];
-let s = staff.find(x=>x.id===id);
-
 let newStatus = order[(order.indexOf(s.status)+1)%order.length];
 
 await fetch(API,{
@@ -394,10 +162,10 @@ method:"POST",
 body:JSON.stringify({
 action:"updateStaff",
 id:id,
-status:newStatus,
 name:s.name,
 job:s.job,
 dept:s.dept,
+status:newStatus,
 photo:s.photo
 })
 });
@@ -405,115 +173,43 @@ photo:s.photo
 loadStaff();
 }
 
-/* REPORT */
-function saveReport(){
-let today=new Date().toISOString().split("T")[0];
-reports[today]=staff.map(s=>({...s}));
-localStorage.setItem("hr_reports",JSON.stringify(reports));
-}
-
-function renderReport(){
-
-let dates=Object.keys(reports).sort().reverse();
-
-filterDate.innerHTML=
-`<option value="all">All Date</option>`+
-dates.map(d=>`<option value="${d}">${d}</option>`).join("");
-
-let all=Object.values(reports).flat();
-
-let depts=[...new Set(all.map(s=>s.dept))];
-
-filterDept.innerHTML=
-`<option value="all">All Dept</option>`+
-depts.map(d=>`<option value="${d}">${d}</option>`).join("");
-
-let date=filterDate.value;
-let dept=filterDept.value;
-
-let data=date==="all"?all:reports[date]||[];
-if(dept!=="all") data=data.filter(s=>s.dept===dept);
-
-reportBody.innerHTML=data.map(s=>`
-<tr>
-<td>${s.name}</td>
-<td>${s.job}</td>
-<td>${s.dept}</td>
-<td>${s.date}</td>
-<td>${s.status}</td>
-</tr>
-`).join("");
-}
-
 /* RENDER */
 function render(){
 
-clock.innerText=new Date().toLocaleString();
+total.innerText = staff.length;
 
-total.innerText=staff.length;
-hadir.innerText=staff.filter(s=>s.status==="Hadir").length;
-cuti.innerText=staff.filter(s=>s.status==="Cuti").length;
-tiada.innerText=staff.filter(s=>s.status==="Tiada").length;
-urusan.innerText=staff.filter(s=>s.status==="Urusan Rasmi Di Luar").length;
+let kw = (search.value||"").toLowerCase();
 
-let keyword=(search.value||"").toLowerCase();
+let html = staff
+.filter(s=>s.name.toLowerCase().includes(kw))
+.map(s=>{
 
-let group={};
-
-staff.filter(s=>s.name.toLowerCase().includes(keyword))
-.forEach(s=>{
-if(!group[s.dept]) group[s.dept]=[];
-group[s.dept].push(s);
-});
-
-let html="";
-
-for(let d in group){
-html+=`<h3>${d||"-"}</h3>`;
-
-group[d].forEach(s=>{
-
-let cls=
+let cls =
 s.status==="Hadir"?"hadir":
 s.status==="Cuti"?"cuti":
 s.status==="Tiada"?"tiada":"urusan";
 
-html+=`
+return `
 <div class="staff-card">
-<div class="left">
-<img class="avatar" src="${s.photo}">
-<div>
 <b>${s.name}</b><br>
-<small>${s.job}</small><br>
-<small>${s.dept}</small><br>
+${s.job}<br>
+${s.dept}<br>
 
 <span class="status ${cls}" onclick="toggleStatus(${s.id})">
 ${s.status}
 </span>
-</div>
-</div>
 
-<div class="actions">
-<button class="edit" onclick="edit(${s.id})">✏️</button>
-<button class="delete" onclick="del(${s.id})">🗑️</button>
+<br><button onclick="del(${s.id})">Delete</button>
 </div>
-</div>`;
-});
+`;
+}).join("");
+
+staffView.innerHTML = html;
 }
 
-staffView.innerHTML=html;
+/* START */
+show("dashboard");
 
-async function saveReport(){
-
-await fetch(API,{
-method:"POST",
-body:JSON.stringify({
-action:"saveReport",
-staff
-})
-});
-
-}
 </script>
 
 </body>
