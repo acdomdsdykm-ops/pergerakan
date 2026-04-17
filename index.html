@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HRMIS MDS V6 STABLE</title>
+<title>HRMIS MDS V6 FIXED</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -15,7 +15,6 @@ body{
   color:white;
 }
 
-/* LOGIN */
 #login{
   width:320px;
   margin:100px auto;
@@ -25,24 +24,17 @@ body{
   border-radius:12px;
 }
 
-/* APP */
 #app{display:none;}
 
-/* HEADER */
 .header{
   display:flex;
   justify-content:space-between;
   padding:15px;
   background:rgba(0,0,0,0.4);
-  align-items:center;
 }
 
-/* LAYOUT */
-.container{
-  display:flex;
-}
+.container{display:flex;}
 
-/* SIDEBAR */
 .sidebar{
   width:220px;
   background:rgba(0,0,0,0.25);
@@ -57,16 +49,10 @@ body{
   background:#0b3d2e;
   color:#fff;
   border:none;
-  cursor:pointer;
 }
 
-/* MAIN */
-.main{
-  flex:1;
-  padding:15px;
-}
+.main{flex:1;padding:15px;}
 
-/* PANEL */
 .panel{
   background:rgba(255,255,255,0.1);
   padding:15px;
@@ -74,88 +60,71 @@ body{
   margin-bottom:15px;
 }
 
-/* INPUT */
 input,select{
   width:100%;
   padding:8px;
   margin:5px 0;
-  border-radius:5px;
-  border:none;
-}
-
-/* MOBILE */
-@media(max-width:768px){
-  .container{flex-direction:column;}
-  .sidebar{width:100%;}
 }
 </style>
 </head>
 
 <body>
 
-<!-- ================= LOGIN ================= -->
 <div id="login">
-<h3>LOGIN HRMIS</h3>
+<h3>LOGIN</h3>
 <input id="u" placeholder="Username">
 <input id="p" type="password" placeholder="Password">
 <button onclick="login()">Login</button>
 </div>
 
-<!-- ================= APP ================= -->
 <div id="app">
 
 <div class="header">
-<div>🏛️ HRMIS MDS V6</div>
+<div>🏛️ HRMIS V6 FIXED</div>
 <button onclick="logout()">Logout</button>
 </div>
 
 <div class="container">
 
-<!-- SIDEBAR -->
 <div class="sidebar">
-<button onclick="load()">📊 Dashboard</button>
-<button onclick="toggleForm()">➕ Tambah Pegawai</button>
-<button onclick="load()">🔄 Refresh</button>
+<button onclick="load()">Dashboard</button>
+<button onclick="toggleForm()">Tambah</button>
 </div>
 
-<!-- MAIN -->
 <div class="main">
 
-<!-- KPI -->
 <div class="panel">
-<h3>📊 KPI Kehadiran</h3>
+<h3>KPI</h3>
 <canvas id="chart"></canvas>
 </div>
 
-<!-- SEARCH -->
 <div class="panel">
-<input id="search" placeholder="🔍 Cari pegawai..." oninput="renderList()">
+<input id="search" placeholder="Cari..." oninput="renderList()">
 </div>
 
-<!-- LIST -->
 <div class="panel">
-<h3>👨‍💼 Senarai Pegawai</h3>
+<h3>Senarai</h3>
 <div id="list"></div>
 </div>
 
-<!-- FORM -->
 <div class="panel" id="form" style="display:none;">
-<h3>➕ Tambah Pegawai</h3>
+<h3>Tambah Pegawai</h3>
 
-<input id="nama" placeholder="Nama">
-<input id="jawatan" placeholder="Jawatan">
-<input id="jabatan" placeholder="Jabatan">
+<input id="nama">
+<input id="jawatan">
+<input id="jabatan">
 
 <select id="status">
-<option value="Hadir">Hadir</option>
-<option value="Cuti">Cuti</option>
+<option>Hadir</option>
+<option>Cuti</option>
 </select>
 
-<input id="catatan" placeholder="Catatan">
+<input id="catatan">
 
 <button onclick="add()">Simpan</button>
 </div>
 
+</div>
 </div>
 </div>
 
@@ -164,33 +133,23 @@ input,select{
 const API = "https://script.google.com/macros/s/AKfycbwKVUmj5ChX_ddWjIygP1xsB51P-aZiWUvu9Ehr_cEGSC7bVslYw1Je0YJAmrgFjRWSaQ/exec";
 
 let DATA = [];
-let chartInstance;
+let chart;
 
-/* ================= API SAFE ================= */
+/* ================= SAFE API (FIXED CORS) ================= */
 async function api(payload){
 
-  try{
+  const form = new URLSearchParams();
 
-    const res = await fetch(API,{
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify(payload)
-    });
-
-    if(!res.ok) throw new Error("HTTP "+res.status);
-
-    const text = await res.text();
-
-    try{
-      return JSON.parse(text);
-    }catch(e){
-      throw new Error("Invalid JSON response");
-    }
-
-  }catch(err){
-    console.log(err);
-    alert("API connection failed");
+  for(const k in payload){
+    form.append(k, payload[k]);
   }
+
+  const res = await fetch(API,{
+    method:"POST",
+    body: form
+  });
+
+  return await res.json();
 }
 
 /* ================= LOGIN ================= */
@@ -198,26 +157,23 @@ async function login(){
 
   const r = await api({
     action:"login",
-    username: document.getElementById("u").value,
-    password: document.getElementById("p").value
+    username: u.value,
+    password: p.value
   });
 
-  if(r && r.status==="ok"){
-    document.getElementById("login").style.display="none";
-    document.getElementById("app").style.display="block";
+  if(r.status==="ok"){
+    login.style.display="none";
+    app.style.display="block";
     load();
   }else{
     alert("Login gagal");
   }
 }
 
-/* ================= LOAD DATA ================= */
+/* ================= LOAD ================= */
 async function load(){
 
-  const d = await api({action:"getPegawai"});
-  if(!d) return;
-
-  DATA = d;
+  DATA = await (await fetch(API+"?action=getPegawai")).json();
 
   renderList();
   renderChart();
@@ -226,35 +182,24 @@ async function load(){
 /* ================= LIST ================= */
 function renderList(){
 
-  const keyword = (document.getElementById("search").value || "").toLowerCase();
+  const key = search.value.toLowerCase();
 
-  let html = "";
-
-  DATA
-  .filter(x => (x.nama||"").toLowerCase().includes(keyword))
-  .forEach(x=>{
-
-    html += `
-      <div style="padding:6px;border-bottom:1px solid #ccc">
-        ${x.nama} - ${x.jawatan} (${x.status})
-      </div>
-    `;
-  });
-
-  document.getElementById("list").innerHTML = html;
+  list.innerHTML = DATA
+    .filter(x => (x.nama||"").toLowerCase().includes(key))
+    .map(x =>
+      `<div>${x.nama} - ${x.jawatan} (${x.status})</div>`
+    ).join("");
 }
 
 /* ================= CHART ================= */
 function renderChart(){
 
-  let hadir = DATA.filter(x=>x.status==="Hadir").length;
-  let cuti  = DATA.filter(x=>x.status==="Cuti").length;
+  const hadir = DATA.filter(x=>x.status==="Hadir").length;
+  const cuti = DATA.filter(x=>x.status==="Cuti").length;
 
-  if(chartInstance) chartInstance.destroy();
+  if(chart) chart.destroy();
 
-  const ctx = document.getElementById("chart");
-
-  chartInstance = new Chart(ctx,{
+  chart = new Chart(document.getElementById("chart"),{
     type:"bar",
     data:{
       labels:["Hadir","Cuti"],
@@ -266,29 +211,27 @@ function renderChart(){
   });
 }
 
-/* ================= TOGGLE ================= */
-function toggleForm(){
-  const f = document.getElementById("form");
-  f.style.display = (f.style.display==="block") ? "none":"block";
-}
-
 /* ================= ADD ================= */
 async function add(){
 
   await api({
     action:"addPegawai",
-    nama: document.getElementById("nama").value,
-    jawatan: document.getElementById("jawatan").value,
-    jabatan: document.getElementById("jabatan").value,
-    status: document.getElementById("status").value,
-    catatan: document.getElementById("catatan").value
+    nama:nama.value,
+    jawatan:jawatan.value,
+    jabatan:jabatan.value,
+    status:status.value,
+    catatan:catatan.value
   });
 
   toggleForm();
   load();
 }
 
-/* ================= LOGOUT ================= */
+/* ================= UI ================= */
+function toggleForm(){
+  form.style.display = form.style.display==="block"?"none":"block";
+}
+
 function logout(){
   location.reload();
 }
