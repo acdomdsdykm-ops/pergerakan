@@ -3,84 +3,54 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HRMIS MDS V6 FIXED</title>
+<title>HRMIS FINAL SYSTEM</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-body{
-  margin:0;
-  font-family:Segoe UI;
-  background:linear-gradient(135deg,#0b3d2e,#145c43,#0f2f24);
-  color:white;
+body{margin:0;font-family:Segoe UI;background:#0f2f24;color:#fff}
+
+#loginBox{
+  width:320px;margin:80px auto;background:#fff;color:#000;
+  padding:20px;border-radius:10px;
 }
 
-#login{
-  width:320px;
-  margin:100px auto;
-  background:#fff;
-  color:#000;
-  padding:20px;
-  border-radius:12px;
-}
-
-#app{display:none;}
+#app{display:none}
 
 .header{
-  display:flex;
-  justify-content:space-between;
-  padding:15px;
-  background:rgba(0,0,0,0.4);
+  display:flex;justify-content:space-between;
+  padding:15px;background:#00000055;
 }
 
-.container{display:flex;}
+.container{display:flex}
 
-.sidebar{
-  width:220px;
-  background:rgba(0,0,0,0.25);
-  min-height:100vh;
-  padding:10px;
-}
+.sidebar{width:220px;background:#00000033;min-height:100vh;padding:10px}
 
-.sidebar button{
-  width:100%;
-  padding:10px;
-  margin:5px 0;
-  background:#0b3d2e;
-  color:#fff;
-  border:none;
-}
+.sidebar button{width:100%;margin:5px 0;padding:10px}
 
-.main{flex:1;padding:15px;}
+.main{flex:1;padding:15px}
 
-.panel{
-  background:rgba(255,255,255,0.1);
-  padding:15px;
-  border-radius:10px;
-  margin-bottom:15px;
-}
+.panel{background:#ffffff11;padding:15px;margin-bottom:10px;border-radius:10px}
 
-input,select{
-  width:100%;
-  padding:8px;
-  margin:5px 0;
-}
+img{border-radius:50%}
 </style>
 </head>
 
 <body>
 
+<!-- LOGIN -->
 <div id="loginBox">
-<h3>LOGIN</h3>
-<input id="u" placeholder="Username">
-<input id="p" type="password" placeholder="Password">
+<h3>LOGIN HRMIS</h3>
+<input id="u" placeholder="username">
+<input id="p" type="password" placeholder="password">
 <button onclick="doLogin()">Login</button>
 </div>
 
+<!-- APP -->
 <div id="app">
 
 <div class="header">
-<div>🏛️ HRMIS V6 FIXED</div>
+<div>🏛 HRMIS FINAL</div>
 <button onclick="logout()">Logout</button>
 </div>
 
@@ -99,13 +69,10 @@ input,select{
 </div>
 
 <div class="panel">
-<input id="search" placeholder="Cari..." oninput="renderList()">
+<input id="search" placeholder="Search..." oninput="render()">
 </div>
 
-<div class="panel">
-<h3>Senarai</h3>
-<div id="list"></div>
-</div>
+<div class="panel" id="list"></div>
 
 <div class="panel" id="form" style="display:none;">
 <h3>Tambah Pegawai</h3>
@@ -121,6 +88,8 @@ input,select{
 
 <input id="catatan">
 
+<input type="file" id="photo">
+
 <button onclick="add()">Simpan</button>
 </div>
 
@@ -130,12 +99,11 @@ input,select{
 
 <script>
 
-const API = "https://script.google.com/macros/s/AKfycbw4yR7BAW3tJhGsVbgRHdPe4VMOpXNnIDKTr--yvXHhFqQCDL-a0Vn069YkBzNTrf_TXg/exec";
-
+const API = "https://script.google.com/macros/s/AKfycbyNmIrv1ifNBiCeIuLy92qmt9uHp-16FyEXvEaKEptE4HeptYc0JKHpukSMT6grTKBz2g/exec";
 let DATA = [];
-let chart;
+let token = localStorage.getItem("token");
 
-/* ================= SAFE API (FIXED CORS) ================= */
+/* ================= API ================= */
 async function api(payload){
 
   const form = new URLSearchParams();
@@ -144,12 +112,8 @@ async function api(payload){
     form.append(k, payload[k]);
   }
 
-  const res = await fetch(API,{
-    method:"POST",
-    body: form
-  });
-
-  return await res.json();
+  const res = await fetch(API,{method:"POST",body:form});
+  return res.json();
 }
 
 /* ================= LOGIN ================= */
@@ -157,16 +121,17 @@ async function doLogin(){
 
   const r = await api({
     action:"login",
-    username: u.value,
-    password: p.value
+    username:u.value,
+    password:p.value
   });
 
   if(r.status==="ok"){
-    document.getElementById("loginBox").style.display="none";
+    localStorage.setItem("token", r.token);
+    loginBox.style.display="none";
     app.style.display="block";
     load();
   }else{
-    alert("Login gagal");
+    alert("Login failed");
   }
 }
 
@@ -175,38 +140,40 @@ async function load(){
 
   DATA = await (await fetch(API+"?action=getPegawai")).json();
 
-  renderList();
-  renderChart();
+  render();
+  chart();
 }
 
-/* ================= LIST ================= */
-function renderList(){
+/* ================= RENDER ================= */
+function render(){
 
-  const key = search.value.toLowerCase();
+  const k = search.value.toLowerCase();
 
   list.innerHTML = DATA
-    .filter(x => (x.nama||"").toLowerCase().includes(key))
-    .map(x =>
-      `<div>${x.nama} - ${x.jawatan} (${x.status})</div>`
-    ).join("");
+    .filter(x => (x.nama||"").toLowerCase().includes(k))
+    .map(x=>`
+      <div>
+        ${x.photo ? `<img src="${x.photo}" width="40">` : ""}
+        ${x.nama} - ${x.jawatan} (${x.status})
+      </div>
+    `).join("");
 }
 
 /* ================= CHART ================= */
-function renderChart(){
+let c;
 
-  const hadir = DATA.filter(x=>x.status==="Hadir").length;
-  const cuti = DATA.filter(x=>x.status==="Cuti").length;
+function chart(){
 
-  if(chart) chart.destroy();
+  const h = DATA.filter(x=>x.status==="Hadir").length;
+  const c1 = DATA.filter(x=>x.status==="Cuti").length;
 
-  chart = new Chart(document.getElementById("chart"),{
+  if(c) c.destroy();
+
+  c = new Chart(document.getElementById("chart"),{
     type:"bar",
     data:{
       labels:["Hadir","Cuti"],
-      datasets:[{
-        data:[hadir,cuti],
-        backgroundColor:["#00ff99","#ff4d4d"]
-      }]
+      datasets:[{data:[h,c1],backgroundColor:["#0f0","#f00"]}]
     }
   });
 }
@@ -214,13 +181,26 @@ function renderChart(){
 /* ================= ADD ================= */
 async function add(){
 
+  const file = photo.files[0];
+  let img = "";
+
+  if(file){
+    img = await new Promise(r=>{
+      const fr = new FileReader();
+      fr.onload = ()=>r(fr.result);
+      fr.readAsDataURL(file);
+    });
+  }
+
   await api({
     action:"addPegawai",
+    token: localStorage.getItem("token"),
     nama:nama.value,
     jawatan:jawatan.value,
     jabatan:jabatan.value,
     status:status.value,
-    catatan:catatan.value
+    catatan:catatan.value,
+    photo:img
   });
 
   toggleForm();
@@ -233,8 +213,14 @@ function toggleForm(){
 }
 
 function logout(){
+  localStorage.clear();
   location.reload();
 }
+
+/* ================= AUTO REFRESH ================= */
+setInterval(()=>{
+  if(app.style.display==="block") load();
+},10000);
 
 </script>
 
