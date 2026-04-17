@@ -259,19 +259,37 @@ margin-bottom:12px;
 
 <script>
 
-let staff = JSON.parse(localStorage.getItem("hr")) || [];
-let reports = JSON.parse(localStorage.getItem("hr_reports")) || {};
+const API = "https://script.google.com/macros/s/AKfycbyUiKO-L6GrTQOla6ROgYElHM8iL26I-JCCurbxNyQ3yQLSifB4V6jNn5ZWOL7tRTWnYQ/exec";
+
+let staff = [];
+let reports = {};
 let editId = null;
+
+async function loadStaff(){
+  const res = await fetch(API,{
+    method:"POST",
+    body:JSON.stringify({action:"getStaff"})
+  });
+
+  staff = await res.json();
+  render();
+}
 
 /* LOGIN */
 function login(){
+const user = document.getElementById("user");
+const pass = document.getElementById("pass");
+
 if(user.value==="admin" && pass.value==="1234"){
-loginPage.style.display="none";
+document.getElementById("loginPage").style.display="none";
 document.querySelector(".main").style.display="flex";
 show("dashboard");
-}else alert("Login salah");
-}
 
+loadStaff(); // 🔥 penting
+}else{
+alert("Login salah");
+}
+}
 /* NAV */
 function show(id,el){
 document.querySelectorAll(".page").forEach(p=>p.style.display="none");
@@ -285,95 +303,106 @@ if(id==="report") renderReport();
 }
 
 /* SAVE STAFF (FIXED ROOT) */
-function saveStaff(){
+async function saveStaff(){
 
-const nameEl=document.getElementById("name");
-const jobEl=document.getElementById("job");
-const deptEl=document.getElementById("dept");
-const photoEl=document.getElementById("photo");
-const statusEl=document.getElementById("status");
+const name = document.getElementById("name").value;
+const job = document.getElementById("job").value;
+const dept = document.getElementById("dept").value;
+const status = document.getElementById("status").value;
+const photoEl = document.getElementById("photo");
 
-if(!nameEl.value.trim()){
+if(!name.trim()){
 alert("Nama wajib isi");
 return;
 }
 
-let file = photoEl.files[0];
+let photo = "https://i.pravatar.cc/150";
 
-function commit(img){
+if(photoEl.files[0]){
+const reader = new FileReader();
 
-if(editId){
+reader.onload = async function(){
+photo = reader.result;
 
-let s = staff.find(x=>x.id===editId);
-if(!s) return;
-
-s.name=nameEl.value;
-s.job=jobEl.value;
-s.dept=deptEl.value;
-s.status=statusEl.value;
-if(img) s.photo=img;
-
-editId=null;
-
-}else{
-
-staff.push({
-id:Date.now(),
-name:nameEl.value,
-job:jobEl.value,
-dept:deptEl.value,
-status:statusEl.value,
-photo:img||"https://i.pravatar.cc/150",
-date:new Date().toISOString().split("T")[0]
+await fetch(API,{
+method:"POST",
+body:JSON.stringify({
+action:"addStaff",
+name,job,dept,status,photo
+})
 });
+
+loadStaff();
+show("staff");
+};
+
+reader.readAsDataURL(photoEl.files[0]);
+return;
 }
 
-localStorage.setItem("hr",JSON.stringify(staff));
+await fetch(API,{
+method:"POST",
+body:JSON.stringify({
+action:"addStaff",
+name,job,dept,status,photo
+})
+});
 
-nameEl.value="";
-jobEl.value="";
-deptEl.value="";
-photoEl.value="";
-
+loadStaff();
 show("staff");
 }
 
-if(file){
-let r=new FileReader();
-r.onload=()=>commit(r.result);
-r.readAsDataURL(file);
-}else commit();
-}
-
 /* DELETE */
-function del(id){
+async function del(id){
 if(!confirm("Padam staff ini?")) return;
-staff=staff.filter(s=>s.id!==id);
-localStorage.setItem("hr",JSON.stringify(staff));
-render();
+
+await fetch(API,{
+method:"POST",
+body:JSON.stringify({
+action:"deleteStaff",
+id
+})
+});
+
+loadStaff();
 }
 
 /* EDIT */
 function edit(id){
-let s=staff.find(x=>x.id===id);
+let s = staff.find(x=>x.id===id);
 if(!s) return;
 
-name.value=s.name;
-job.value=s.job;
-dept.value=s.dept;
-status.value=s.status;
+document.getElementById("name").value = s.name;
+document.getElementById("job").value = s.job;
+document.getElementById("dept").value = s.dept;
+document.getElementById("status").value = s.status;
 
-editId=id;
+editId = id;
 show("add");
 }
 
 /* STATUS */
-function toggleStatus(id){
+async function toggleStatus(id){
+
 let order=["Hadir","Cuti","Tiada","Urusan Rasmi Di Luar"];
-let i=staff.findIndex(s=>s.id===id);
-staff[i].status=order[(order.indexOf(staff[i].status)+1)%order.length];
-localStorage.setItem("hr",JSON.stringify(staff));
-render();
+let s = staff.find(x=>x.id===id);
+
+let newStatus = order[(order.indexOf(s.status)+1)%order.length];
+
+await fetch(API,{
+method:"POST",
+body:JSON.stringify({
+action:"updateStaff",
+id:id,
+status:newStatus,
+name:s.name,
+job:s.job,
+dept:s.dept,
+photo:s.photo
+})
+});
+
+loadStaff();
 }
 
 /* REPORT */
@@ -474,15 +503,17 @@ ${s.status}
 
 staffView.innerHTML=html;
 
-saveReport();
-localStorage.setItem("hr",JSON.stringify(staff));
+async function saveReport(){
+
+await fetch(API,{
+method:"POST",
+body:JSON.stringify({
+action:"saveReport",
+staff
+})
+});
+
 }
-
-/* INIT */
-show("dashboard");
-
-setInterval(()=>render(),1000);
-
 </script>
 
 </body>
