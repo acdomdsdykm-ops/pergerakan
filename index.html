@@ -152,20 +152,21 @@ input{
 <script>
 
 /* ================= CONFIG ================= */
-const API = "https://script.google.com/macros/s/AKfycbwWCQDnaoF8xSsg9N9i2HJuDs1Ye3J5s6SOSinNjgxA-v7AkIb4Izo0zH5MevsgVkpTlA/exec";
+const API = "https://script.google.com/macros/s/AKfycbyHcQZgLcKW2KhaBZ8F05fO8l9oQiL35QZ5U7ZcxPB_kUyec1_8jZOqwN5rmXX18LPXzA/exec";
 
 /* ================= SAFE API (ANTI NETWORK ERROR) ================= */
-async function api(payload, retry=2){
+async function api(payload){
 
-  try{
+  const res = await fetch(API,{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json"
+    },
+    body: JSON.stringify(payload)
+  });
 
-    const res = await fetch(API,{
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json"
-      },
-      body: JSON.stringify(payload)
-    });
+  return await res.json();
+}
 
     if(!res.ok) throw new Error("HTTP "+res.status);
 
