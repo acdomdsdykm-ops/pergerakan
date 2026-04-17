@@ -2,120 +2,243 @@
 <html lang="ms">
 <head>
 <meta charset="UTF-8">
-<title>Majlis Daerah Simunjan</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MDS - Sistem Pergerakan Pegawai</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
 
 <style>
-body {
+
+/* =========================
+   BASE (GOV STYLE THEME)
+========================= */
+body{
   margin:0;
-  font-family:Segoe UI;
-  background:linear-gradient(135deg,#0f3d2e,#145a32);
-  color:white;
+  font-family: "Segoe UI", sans-serif;
+  background:#f4f6f9;
+  color:#1f2d3d;
 }
-.container{padding:20px;}
-.glass{
-  background:rgba(255,255,255,0.08);
+
+/* SIDEBAR */
+.sidebar{
+  position:fixed;
+  top:0;left:0;
+  width:240px;
+  height:100vh;
+  background:#0b3d2e;
+  color:white;
   padding:20px;
-  border-radius:15px;
+}
+
+.sidebar h2{
+  font-size:16px;
   margin-bottom:20px;
 }
-input,button{padding:8px;margin:5px;border-radius:8px;border:none;}
-button{background:#d4af37;cursor:pointer;}
-.card{display:flex;align-items:center;margin-bottom:10px;}
-.card img{width:50px;height:50px;border-radius:50%;margin-right:10px;}
-.hidden{display:none;}
+
+.menu{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.menu button{
+  background:rgba(255,255,255,0.1);
+  border:none;
+  color:white;
+  padding:10px;
+  border-radius:8px;
+  text-align:left;
+}
+
+/* MAIN */
+.main{
+  margin-left:260px;
+  padding:20px;
+}
+
+/* TOP BAR */
 .topbar{
   display:flex;
   justify-content:space-between;
   align-items:center;
+  background:white;
+  padding:15px;
+  border-radius:10px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.05);
 }
-.logout{
-  background:#e74c3c;
-  color:white;
+
+/* KPI */
+.kpi{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:15px;
+  margin-top:15px;
 }
+
+.card{
+  background:white;
+  padding:15px;
+  border-radius:10px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.05);
+  text-align:center;
+}
+
+.card h3{
+  margin:5px 0;
+}
+
+/* FILTER */
+.panel{
+  background:white;
+  padding:15px;
+  border-radius:10px;
+  margin-top:15px;
+}
+
+/* LIST */
+.list{
+  background:white;
+  padding:10px;
+  border-radius:10px;
+}
+
+.item{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px;
+  border-bottom:1px solid #eee;
+}
+
+.item img{
+  width:45px;
+  height:45px;
+  border-radius:50%;
+}
+
+/* BUTTON */
+button{
+  cursor:pointer;
+}
+
+/* MOBILE */
+@media(max-width:768px){
+  .sidebar{
+    position:relative;
+    width:100%;
+    height:auto;
+  }
+
+  .main{
+    margin-left:0;
+  }
+
+  .kpi{
+    grid-template-columns:repeat(2,1fr);
+  }
+
+  .topbar{
+    flex-direction:column;
+    gap:10px;
+    text-align:center;
+  }
+}
+
 </style>
 </head>
 
 <body>
-<div class="container">
 
-<!-- LOGIN -->
-<div id="loginBox" class="glass">
-  <h2>Login</h2>
-  <input id="u" placeholder="Username">
-  <input id="p" type="password" placeholder="Password">
-  <button onclick="login()">Login</button>
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <h2>🏛️ MDS SYSTEM</h2>
+  <div class="menu">
+    <button onclick="showSection('dashboard')">Dashboard</button>
+    <button onclick="showSection('data')">Pegawai</button>
+    <button onclick="showSection('report')">Laporan</button>
+  </div>
 </div>
 
-<!-- APP -->
-<div id="app" class="hidden">
+<!-- MAIN -->
+<div class="main">
 
+<!-- TOPBAR -->
 <div class="topbar">
-  <h1>Majlis Daerah Simunjan</h1>
-  <button class="logout" onclick="logout()">Logoff</button>
+  <div><b>Majlis Daerah Simunjan</b></div>
+  <button onclick="logout()" style="background:#c0392b;color:white;border:none;padding:8px 12px;border-radius:8px;">
+    Logoff
+  </button>
 </div>
 
-<div class="glass">
-  <h3>Tambah Pegawai</h3>
-  <input id="nama" placeholder="Nama">
-  <input id="jawatan" placeholder="Jawatan">
-  <input id="jabatan" placeholder="Jabatan">
-  <input id="status" placeholder="Status">
-  <input type="file" id="file">
-  <button onclick="add()">Tambah</button>
+<!-- KPI DASHBOARD -->
+<div id="dashboard">
+
+<div class="kpi">
+  <div class="card">
+    <h3 id="total">0</h3>
+    <small>Jumlah Pegawai</small>
+  </div>
+  <div class="card">
+    <h3 id="hadir">0</h3>
+    <small>Hadir</small>
+  </div>
+  <div class="card">
+    <h3 id="cuti">0</h3>
+    <small>Cuti</small>
+  </div>
+  <div class="card">
+    <h3 id="tiada">0</h3>
+    <small>Tiada</small>
+  </div>
 </div>
 
-<div class="glass">
-  <h3>📈 Graf Pergerakan Pegawai</h3>
+<div class="panel">
+  <h3>📊 Graf Pergerakan</h3>
   <canvas id="chart"></canvas>
 </div>
 
-<div class="glass">
+<div class="panel">
   <h3>📅 Calendar</h3>
   <div id="calendar"></div>
 </div>
 
-<div class="glass">
-  <h3>Senarai Pegawai</h3>
-  <div id="list"></div>
 </div>
 
+<!-- FILTER + DATA -->
+<div id="data" style="display:none;">
+
+<div class="panel">
+  <h3>🔍 Carian</h3>
+  <input id="search" placeholder="Cari nama / jawatan..." onkeyup="filterData()">
+
+  <select id="filterJabatan" onchange="filterData()">
+    <option value="">Semua Jabatan</option>
+  </select>
 </div>
+
+<div class="panel list" id="list"></div>
+
+</div>
+
 </div>
 
 <script>
+
 const API="https://script.google.com/macros/s/AKfycbzrCoKNBPCou3lbMBa4RYqb2r9Mhcqbn6W4M33K_Qfj4HBvPk7jaZJBhjFVG-4L3tl-HQ/exec";
-let session={};
-let chartInstance=null;
+let session={}, rawData=[], chartInstance=null;
 
-// LOGIN
-async function login(){
-  let res=await fetch(API,{
-    method:"POST",
-    body:JSON.stringify({
-      action:"login",
-      username:u.value,
-      password:p.value
-    })
-  });
-  let data=await res.json();
-
-  if(data.status==="success"){
-    session=data;
-    loginBox.classList.add("hidden");
-    app.classList.remove("hidden");
-    load();
-  }else alert("Login gagal");
+// LOGIN SIMPLIFIED (optional integrate if needed)
+function logout(){
+  location.reload();
 }
 
-// LOGOUT
-function logout(){
-  session={};
-  app.classList.add("hidden");
-  loginBox.classList.remove("hidden");
+// NAV
+function showSection(sec){
+  dashboard.style.display="none";
+  data.style.display="none";
+  document.getElementById(sec).style.display="block";
 }
 
 // LOAD DATA
@@ -123,126 +246,110 @@ async function load(){
   let res=await fetch(API,{
     method:"POST",
     body:JSON.stringify({
-      action:"getData",
-      role:session.role,
-      jabatan:session.jabatan
+      action:"getData"
     })
   });
 
-  let data=await res.json();
-  render(data);
-  drawGraph(data);
-  calendar(data);
+  rawData = await res.json();
+
+  buildDashboard(rawData);
+  buildDropdown(rawData);
+  filterData();
 }
 
-// RENDER
-function render(data){
+// KPI
+function buildDashboard(data){
+  total.innerText=data.length;
+  hadir.innerText=data.filter(d=>d.status==="Hadir").length;
+  cuti.innerText=data.filter(d=>d.status==="Cuti").length;
+  tiada.innerText=data.filter(d=>d.status==="Tiada").length;
+
+  buildChart(data);
+  buildCalendar(data);
+}
+
+// FILTER
+function filterData(){
+  let k=search.value?.toLowerCase()||"";
+  let j=filterJabatan.value;
+
+  let f=rawData.filter(d=>{
+    return (d.nama.toLowerCase().includes(k) || d.jawatan.toLowerCase().includes(k))
+    && (j===""||d.jabatan===j);
+  });
+
+  renderList(f);
+}
+
+// LIST
+function renderList(data){
   list.innerHTML="";
   data.forEach(d=>{
     list.innerHTML+=`
-    <div class="card">
+    <div class="item">
       <img src="${d.gambar_url}">
       <div>
         <b>${d.nama}</b><br>
-        ${d.jawatan} (${d.jabatan})<br>
-        ${d.status}
+        <small>${d.jawatan} | ${d.jabatan}</small><br>
+        <span>${d.status}</span>
       </div>
-      <button onclick="del('${d.id}')">X</button>
     </div>`;
   });
 }
 
-// ADD
-async function add(){
-  let file=document.getElementById("file").files[0];
-  let base64="";
+// DROPDOWN
+function buildDropdown(data){
+  let unique=[...new Set(data.map(d=>d.jabatan))];
+  filterJabatan.innerHTML='<option value="">Semua Jabatan</option>';
 
-  if(file){
-    base64=await toBase64(file);
-  }
-
-  await fetch(API,{
-    method:"POST",
-    body:JSON.stringify({
-      action:"add",
-      nama:nama.value,
-      jawatan:jawatan.value,
-      jabatan:jabatan.value,
-      status:status.value,
-      image_base64:base64
-    })
-  });
-
-  load();
-}
-
-// DELETE
-async function del(id){
-  await fetch(API,{
-    method:"POST",
-    body:JSON.stringify({action:"delete",id})
-  });
-  load();
-}
-
-// BASE64
-function toBase64(file){
-  return new Promise((res,rej)=>{
-    let reader=new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload=()=>res(reader.result.split(',')[1]);
+  unique.forEach(j=>{
+    filterJabatan.innerHTML+=`<option value="${j}">${j}</option>`;
   });
 }
 
-// 📈 GRAPH (LINE CHART)
-function drawGraph(data){
-
-  let byDate={};
+// CHART
+function buildChart(data){
+  let map={};
 
   data.forEach(d=>{
-    let date=new Date(d.tarikh).toLocaleDateString();
-    byDate[date]=(byDate[date]||0)+1;
+    let dt=new Date(d.tarikh).toLocaleDateString();
+    map[dt]=(map[dt]||0)+1;
   });
 
-  let labels=Object.keys(byDate);
-  let values=Object.values(byDate);
+  if(chartInstance) chartInstance.destroy();
 
-  if(chartInstance){
-    chartInstance.destroy();
-  }
-
-  chartInstance=new Chart(document.getElementById("chart"),{
+  chartInstance=new Chart(chart,{
     type:"line",
     data:{
-      labels:labels,
+      labels:Object.keys(map),
       datasets:[{
-        label:"Jumlah Pergerakan",
-        data:values,
-        borderColor:"#f1c40f",
-        backgroundColor:"rgba(241,196,15,0.2)",
-        tension:0.3,
-        fill:true
+        label:"Pergerakan Pegawai",
+        data:Object.values(map),
+        borderColor:"#0b3d2e",
+        backgroundColor:"rgba(11,61,46,0.1)",
+        fill:true,
+        tension:0.3
       }]
     }
   });
 }
 
-// 📅 CALENDAR
-function calendar(data){
+// CALENDAR
+function buildCalendar(data){
   let events=data.map(d=>({
     title:d.nama+" ("+d.status+")",
     start:d.tarikh
   }));
 
-  let cal=new FullCalendar.Calendar(
-    document.getElementById("calendar"),
-    {
-      initialView:"dayGridMonth",
-      events:events
-    }
-  );
-  cal.render();
+  new FullCalendar.Calendar(calendar,{
+    initialView:"dayGridMonth",
+    events:events
+  }).render();
 }
+
+// INIT
+load();
+
 </script>
 
 </body>
