@@ -47,13 +47,16 @@ body{margin:0;font-family:Segoe UI;background:#0b3d2e;color:#fff;}
 const API="https://script.google.com/macros/s/AKfycbwQYe-_oZnd2sMXHpSj2Z81PuTS0DkLiVxDW2m4trY28Q1dxkTvY0QG_6ZLv92QvT3uuw/exec";
 
 /* ================= API CALL ================= */
-async function api(data){
-  let r=await fetch(API,{
+async function api(payload){
+  const res = await fetch(API,{
     method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify(data)
+    headers:{
+      "Content-Type":"application/json"
+    },
+    body: JSON.stringify(payload)
   });
-  return r.json();
+
+  return await res.json();
 }
 
 /* ================= LOGIN ================= */
