@@ -3,146 +3,109 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>HRMIS MDS</title>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<title>HRMIS MDS FINAL</title>
 
 <style>
 body{margin:0;font-family:Segoe UI;background:#0b3d2e;color:#fff;}
 #login{width:300px;margin:120px auto;background:#fff;color:#000;padding:20px;border-radius:10px;}
 #app{display:none;}
-
-.topbar{padding:15px;background:rgba(0,0,0,0.3);display:flex;justify-content:space-between;}
-.sidebar{width:200px;background:rgba(0,0,0,0.2);height:100vh;float:left;}
-.main{margin-left:200px;padding:15px;}
-
-button{padding:8px;margin:5px;}
-.panel{background:rgba(255,255,255,0.1);padding:10px;margin-bottom:10px;border-radius:10px;}
+.panel{background:rgba(255,255,255,0.1);padding:10px;margin:10px;}
 </style>
 </head>
 
 <body>
 
-<!-- LOGIN -->
 <div id="login">
 <h3>LOGIN HRMIS</h3>
-<input id="u" placeholder="user"><br><br>
-<input id="p" type="password" placeholder="pass"><br><br>
+<input id="u"><br><br>
+<input id="p" type="password"><br><br>
 <button onclick="login()">Login</button>
 </div>
 
-<!-- APP -->
 <div id="app">
 
-<div class="topbar">
-<div>MAJLIS DAERAH SIMUNJAN</div>
+<h3>HRMIS DASHBOARD</h3>
 <button onclick="logout()">Logout</button>
-</div>
-
-<div class="sidebar">
-<button onclick="load()">Dashboard</button>
-<button onclick="showAdd()">Tambah</button>
-<button onclick="pdf()">PDF</button>
-</div>
-
-<div class="main">
 
 <div class="panel">
-<h3>KPI</h3>
-<canvas id="c"></canvas>
-</div>
-
-<div class="panel">
+<button onclick="load()">Load Pegawai</button>
 <div id="list"></div>
 </div>
 
-<div class="panel" id="addBox" style="display:none;">
-<input id="nama" placeholder="Nama"><br>
-<input id="jawatan" placeholder="Jawatan"><br>
-<input id="jabatan" placeholder="Jabatan"><br>
-<input id="status" placeholder="Status"><br>
-<button onclick="add()">Simpan</button>
+<div class="panel">
+<input id="nama" placeholder="Nama">
+<input id="jawatan" placeholder="Jawatan">
+<input id="jabatan" placeholder="Jabatan">
+<input id="status" placeholder="Status">
+<button onclick="add()">Tambah</button>
 </div>
 
-</div>
 </div>
 
 <script>
 
-const API="https://script.google.com/macros/s/AKfycbx06z4b8fKBeNFCiJIVZ1kwTM7QU2i8LQp4QMy2Rew7xubN-f7UW4UohYKWW8B9S4KZgQ/exec";
-let data=[];
+const API="https://script.google.com/macros/s/AKfycbwQYe-_oZnd2sMXHpSj2Z81PuTS0DkLiVxDW2m4trY28Q1dxkTvY0QG_6ZLv92QvT3uuw/exec";
 
-/* LOGIN */
+/* ================= API CALL ================= */
+async function api(data){
+  let r=await fetch(API,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(data)
+  });
+  return r.json();
+}
+
+/* ================= LOGIN ================= */
 async function login(){
-let r=await fetch(API,{
-method:"POST",
-body:JSON.stringify({action:"login",username:u.value,password:p.value})
-});
-let d=await r.json();
 
-if(d.status=="ok"){
-sessionStorage.setItem("role",d.role);
+let r=await api({
+action:"login",
+username:u.value,
+password:p.value
+});
+
+if(r.status=="ok"){
+sessionStorage.setItem("role",r.role);
 login.style.display="none";
 app.style.display="block";
 load();
+}else{
+alert("Login gagal");
 }
 }
 
-/* LOAD */
+/* ================= LOAD ================= */
 async function load(){
-let r=await fetch(API,{method:"POST",body:JSON.stringify({action:"getPegawai"})});
-data=await r.json();
-render();
-}
 
-/* RENDER */
-function render(){
+let d=await api({action:"getPegawai"});
 
 let h="";
-data.forEach(p=>{
-h+=`<div>${p.nama} - ${p.jawatan} (${p.status})</div>`;
+d.forEach(x=>{
+h+=`<div>${x.nama} - ${x.jawatan} (${x.status})</div>`;
 });
+
 list.innerHTML=h;
-
-new Chart(c,{
-type:"bar",
-data:{
-labels:["Hadir","Cuti"],
-datasets:[{data:[
-data.filter(x=>x.status=="Hadir").length,
-data.filter(x=>x.status=="Cuti").length
-]}]
-}
-});
 }
 
-/* ADD */
+/* ================= ADD ================= */
 async function add(){
-await fetch(API,{
-method:"POST",
-body:JSON.stringify({
+
+await api({
 action:"addPegawai",
 nama:nama.value,
 jawatan:jawatan.value,
 jabatan:jabatan.value,
 status:status.value
-})
 });
+
 load();
 }
 
-/* UI */
-function showAdd(){addBox.style.display="block";}
-
-/* LOGOUT */
+/* ================= LOGOUT ================= */
 function logout(){
 sessionStorage.clear();
 location.reload();
-}
-
-/* PDF */
-function pdf(){
-window.open(API+"?action=pdf");
 }
 
 </script>
