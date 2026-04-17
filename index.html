@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HRMIS PREMIUM SYSTEM</title>
+<title>Sistem Pergerakan V2</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -17,30 +17,30 @@ body{
 
 /* LOGIN */
 #loginBox{
-  width:340px;
+  width:360px;
   margin:120px auto;
   background:#fff;
   padding:25px;
-  border-radius:12px;
-  box-shadow:0 10px 30px rgba(0,0,0,0.1);
+  border-radius:10px;
+  border:1px solid #d9e1ea;
 }
 
-/* APP CENTERED */
+/* APP WRAPPER */
 #app{
   display:none;
   max-width:1200px;
-  margin:30px auto;
+  margin:25px auto;
   background:#fff;
-  border-radius:16px;
+  border-radius:12px;
   overflow:hidden;
-  box-shadow:0 10px 40px rgba(0,0,0,0.08);
+  border:1px solid #d9e1ea;
 }
 
 /* HEADER */
 .header{
-  background:#0b2e4a;
+  background:#0a2a43;
   color:#fff;
-  padding:18px;
+  padding:16px;
   display:flex;
   justify-content:space-between;
   align-items:center;
@@ -52,45 +52,36 @@ body{
 /* SIDEBAR */
 .sidebar{
   width:220px;
-  background:#f7f9fc;
-  border-right:1px solid #e5e9f0;
-  padding:15px;
+  background:#f6f8fb;
+  border-right:1px solid #e2e8f0;
+  padding:12px;
 }
 
 .sidebar button{
   width:100%;
-  padding:12px;
+  padding:10px;
   margin:6px 0;
   border:none;
-  border-radius:8px;
-  background:#0b2e4a;
+  background:#0a2a43;
   color:#fff;
+  border-radius:6px;
   cursor:pointer;
 }
 
 /* MAIN */
 .main{
   flex:1;
-  padding:20px;
-  background:#f4f7fb;
+  padding:18px;
+  background:#f3f6fb;
 }
 
 /* PANELS */
 .panel{
   background:#fff;
-  border-radius:12px;
-  padding:18px;
-  margin-bottom:16px;
-  box-shadow:0 4px 18px rgba(0,0,0,0.05);
-}
-
-/* INPUT */
-input,select{
-  width:100%;
-  padding:10px;
-  margin:6px 0;
-  border-radius:8px;
-  border:1px solid #d9dee7;
+  padding:15px;
+  border-radius:10px;
+  margin-bottom:14px;
+  border:1px solid #e5eaf0;
 }
 
 /* KPI */
@@ -101,34 +92,54 @@ input,select{
 }
 
 .kpi-box{
-  background:linear-gradient(135deg,#0b2e4a,#1d5c8f);
+  background:linear-gradient(135deg,#0a2a43,#1c5c8a);
   color:#fff;
-  padding:16px;
-  border-radius:12px;
+  padding:15px;
+  border-radius:10px;
   text-align:center;
 }
 
 .kpi-box h2{
-  margin:5px 0;
+  margin:5px 0 0;
   font-size:26px;
 }
 
-/* LIST */
-.list-item{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  padding:10px;
-  border-bottom:1px solid #eee;
+/* TABLE */
+table{
+  width:100%;
+  border-collapse:collapse;
 }
 
-/* IMAGE */
-img{
-  width:40px;
-  height:40px;
-  border-radius:50%;
-  object-fit:cover;
-  border:2px solid #0b2e4a;
+th,td{
+  padding:10px;
+  border-bottom:1px solid #eee;
+  font-size:14px;
+}
+
+th{
+  background:#f1f5f9;
+  text-align:left;
+}
+
+/* STATUS BADGE */
+.badge{
+  padding:4px 8px;
+  border-radius:6px;
+  font-size:12px;
+  color:#fff;
+}
+
+.pending{background:#f59e0b}
+.approved{background:#10b981}
+.done{background:#3b82f6}
+
+/* INPUT */
+input,select{
+  width:100%;
+  padding:9px;
+  margin:5px 0;
+  border-radius:6px;
+  border:1px solid #cfd8e3;
 }
 
 /* MOBILE */
@@ -144,17 +155,17 @@ img{
 
 <!-- LOGIN -->
 <div id="loginBox">
-<h3>LOGIN HRMIS</h3>
+<h3>LOGIN SISTEM PERGERAKAN</h3>
 <input id="u" placeholder="Username">
 <input id="p" type="password" placeholder="Password">
-<button onclick="doLogin()">Login</button>
+<button onclick="login()">Login</button>
 </div>
 
 <!-- APP -->
 <div id="app">
 
 <div class="header">
-<div>🏛 HRMIS PREMIUM SYSTEM</div>
+<div>🏛 Sistem Pergerakan V2</div>
 <button onclick="logout()">Logout</button>
 </div>
 
@@ -163,7 +174,7 @@ img{
 <!-- SIDEBAR -->
 <div class="sidebar">
 <button onclick="load()">Dashboard</button>
-<button onclick="toggleForm()">Tambah Pegawai</button>
+<button onclick="toggleForm()">+ Rekod Baru</button>
 </div>
 
 <!-- MAIN -->
@@ -171,51 +182,44 @@ img{
 
 <!-- KPI -->
 <div class="panel">
-<h3 style="color:#0b2e4a">📊 Dashboard Utama</h3>
-
+<h3>📊 Dashboard</h3>
 <div class="kpi">
-<div class="kpi-box">
-<div>Total</div>
-<h2 id="total">0</h2>
+<div class="kpi-box"><div>Total</div><h2 id="total">0</h2></div>
+<div class="kpi-box"><div>Pending</div><h2 id="pending">0</h2></div>
+<div class="kpi-box"><div>Approved</div><h2 id="approved">0</h2></div>
 </div>
-
-<div class="kpi-box">
-<div>Hadir</div>
-<h2 id="hadir">0</h2>
-</div>
-
-<div class="kpi-box">
-<div>Cuti</div>
-<h2 id="cuti">0</h2>
-</div>
-</div>
-
 </div>
 
 <!-- SEARCH -->
 <div class="panel">
-<input id="search" placeholder="🔍 Cari pegawai..." oninput="render()">
+<input id="search" placeholder="Cari rekod..." oninput="render()">
 </div>
 
-<!-- LIST -->
-<div class="panel" id="list"></div>
+<!-- TABLE -->
+<div class="panel">
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Nama</th>
+<th>Status</th>
+<th>Tindakan</th>
+</tr>
+</thead>
+<tbody id="list"></tbody>
+</table>
+</div>
 
 <!-- FORM -->
 <div class="panel" id="form" style="display:none;">
-<h3>➕ Tambah Pegawai</h3>
+<h3>Rekod Pergerakan Baru</h3>
 
-<input id="nama">
-<input id="jawatan">
-<input id="jabatan">
-
+<input id="nama" placeholder="Nama">
 <select id="status">
-<option>Hadir</option>
-<option>Cuti</option>
+<option>Pending</option>
+<option>Approved</option>
+<option>Done</option>
 </select>
-
-<input id="catatan">
-
-<input type="file" id="photo">
 
 <button onclick="add()">Simpan</button>
 </div>
@@ -230,7 +234,7 @@ const API = "https://script.google.com/macros/s/AKfycbyNmIrv1ifNBiCeIuLy92qmt9uH
 
 let DATA = [];
 
-/* ================= API (NO CORS ISSUE) ================= */
+/* ================= API ================= */
 async function api(payload){
 
   const form = new URLSearchParams();
@@ -244,30 +248,17 @@ async function api(payload){
 }
 
 /* ================= LOGIN ================= */
-async function doLogin(){
-
-  const r = await api({
-    action:"login",
-    username:u.value,
-    password:p.value
-  });
-
-  if(r.status==="ok"){
-    localStorage.setItem("token", r.token);
-
-    loginBox.style.display="none";
-    app.style.display="block";
-
-    load();
-  }else{
-    alert("Login gagal");
-  }
+function login(){
+  localStorage.setItem("user", u.value);
+  loginBox.style.display="none";
+  app.style.display="block";
+  load();
 }
 
 /* ================= LOAD ================= */
 async function load(){
 
-  DATA = await (await fetch(API+"?action=getPegawai")).json();
+  DATA = await (await fetch(API+"?action=getData")).json();
 
   updateKPI();
   render();
@@ -276,15 +267,12 @@ async function load(){
 /* ================= KPI ================= */
 function updateKPI(){
 
-  const h = DATA.filter(x=>x.status==="Hadir").length;
-  const c = DATA.filter(x=>x.status==="Cuti").length;
-
   total.innerText = DATA.length;
-  hadir.innerText = h;
-  cuti.innerText = c;
+  pending.innerText = DATA.filter(x=>x.status==="Pending").length;
+  approved.innerText = DATA.filter(x=>x.status==="Approved").length;
 }
 
-/* ================= RENDER LIST ================= */
+/* ================= RENDER TABLE ================= */
 function render(){
 
   const k = search.value.toLowerCase();
@@ -292,42 +280,43 @@ function render(){
   list.innerHTML = DATA
     .filter(x => (x.nama||"").toLowerCase().includes(k))
     .map(x=>`
-      <div class="list-item">
-        ${x.photo ? `<img src="${x.photo}">` : ""}
-        <div>
-          <div style="font-weight:600">${x.nama}</div>
-          <small>${x.jawatan} • ${x.jabatan} • ${x.status}</small>
-        </div>
-      </div>
+      <tr>
+        <td>${x.id}</td>
+        <td>${x.nama}</td>
+        <td>
+          <span class="badge ${
+            x.status==="Pending"?"pending":
+            x.status==="Approved"?"approved":"done"
+          }">${x.status}</span>
+        </td>
+        <td>
+          <button onclick="approve('${x.id}')">Approve</button>
+        </td>
+      </tr>
     `).join("");
 }
 
 /* ================= ADD ================= */
 async function add(){
 
-  const file = photo.files[0];
-
-  let img = "";
-  if(file){
-    img = await new Promise(r=>{
-      const fr = new FileReader();
-      fr.onload=()=>r(fr.result);
-      fr.readAsDataURL(file);
-    });
-  }
-
   await api({
-    action:"addPegawai",
-    token: localStorage.getItem("token"),
+    action:"add",
     nama:nama.value,
-    jawatan:jawatan.value,
-    jabatan:jabatan.value,
-    status:status.value,
-    catatan:catatan.value,
-    photo:img
+    status:status.value
   });
 
   toggleForm();
+  load();
+}
+
+/* ================= APPROVE ================= */
+async function approve(id){
+
+  await api({
+    action:"approve",
+    id:id
+  });
+
   load();
 }
 
