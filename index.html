@@ -3,36 +3,65 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MDS Dashboard</title>
+<title>MDS - Sistem Pergerakan Pegawai</title>
 
 <style>
 body{
   margin:0;
   font-family:Segoe UI;
-  background:#f4f6f9;
+  background:#eef2f5;
 }
 
-/* TOP BAR */
+/* LOGIN */
+#loginBox{
+  width:320px;
+  margin:120px auto;
+  background:white;
+  padding:20px;
+  border-radius:12px;
+  box-shadow:0 5px 15px rgba(0,0,0,0.1);
+}
+#loginBox input{
+  width:100%;
+  padding:10px;
+  margin:8px 0;
+}
+#loginBox button{
+  width:100%;
+  padding:10px;
+  background:#0b3d2e;
+  color:white;
+  border:none;
+  border-radius:8px;
+}
+
+/* APP */
+#app{display:none;}
+
 .topbar{
   background:#0b3d2e;
   color:white;
-  padding:15px;
+  padding:12px;
   display:flex;
   justify-content:space-between;
   align-items:center;
+  flex-wrap:wrap;
+}
+.topbar button{
+  background:#c0392b;
+  color:white;
+  border:none;
+  padding:8px 12px;
+  border-radius:6px;
 }
 
-/* SIDEBAR */
+/* LAYOUT */
+.wrapper{display:flex;min-height:100vh;}
+
 .sidebar{
-  position:fixed;
-  top:0;
-  left:0;
   width:230px;
-  height:100vh;
   background:#0b3d2e;
   color:white;
-  padding-top:60px;
-  transition:0.3s;
 }
 
 .sidebar button{
@@ -44,62 +73,63 @@ body{
   text-align:left;
   cursor:pointer;
 }
+.sidebar button:hover{background:rgba(255,255,255,0.1);}
 
-.sidebar button:hover{
-  background:rgba(255,255,255,0.1);
-}
+.main{flex:1;padding:15px;}
 
-/* MAIN */
-.main{
-  margin-left:230px;
-  padding:15px;
-}
-
-/* PANEL */
 .panel{
   background:white;
   padding:15px;
-  border-radius:10px;
   margin-bottom:15px;
-  box-shadow:0 2px 6px rgba(0,0,0,0.1);
+  border-radius:10px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.08);
 }
 
-/* CARD */
 .card{
   display:flex;
   gap:10px;
   padding:10px;
   border-bottom:1px solid #eee;
 }
-
 .card img{
-  width:40px;
-  height:40px;
-  border-radius:50%;
+  width:45px;height:45px;border-radius:50%;
+}
+
+input{
+  padding:8px;
+  margin:5px 0;
+  width:100%;
 }
 
 /* MOBILE */
 @media(max-width:768px){
-  .sidebar{
-    position:relative;
-    width:100%;
-    height:auto;
-  }
-  .main{
-    margin-left:0;
-  }
+  .wrapper{flex-direction:column;}
+  .sidebar{width:100%;}
 }
 </style>
 </head>
 
 <body>
 
+<!-- ================= LOGIN ================= -->
+<div id="loginBox">
+  <h3>🔐 Login Sistem MDS</h3>
+  <input id="u" placeholder="Username">
+  <input id="p" type="password" placeholder="Password">
+  <button onclick="login()">Login</button>
+</div>
+
+<!-- ================= APP ================= -->
+<div id="app">
+
 <div class="topbar">
   <div><b>MAJLIS DAERAH SIMUNJAN</b></div>
   <button onclick="logout()">Logoff</button>
 </div>
 
-<!-- SIDEBAR MENU -->
+<div class="wrapper">
+
+<!-- SIDEBAR -->
 <div class="sidebar">
   <button onclick="show('summary')">📊 Summary Jabatan</button>
   <button onclick="show('search')">🔍 Carian</button>
@@ -107,7 +137,7 @@ body{
   <button onclick="show('list')">🏢 Senarai Jabatan</button>
 </div>
 
-<!-- MAIN CONTENT -->
+<!-- MAIN -->
 <div class="main">
 
 <!-- SUMMARY -->
@@ -119,18 +149,19 @@ body{
 <!-- SEARCH -->
 <div id="search" class="panel section" style="display:none;">
   <h3>🔍 Carian Pegawai</h3>
-  <input id="searchInput" placeholder="Cari nama..." onkeyup="filterData()" style="width:100%;padding:10px;">
+  <input id="searchInput" placeholder="Cari nama / jawatan...">
   <div id="searchResult"></div>
 </div>
 
 <!-- ADD -->
 <div id="add" class="panel section" style="display:none;">
   <h3>➕ Tambah Pegawai</h3>
-  <input id="nama" placeholder="Nama"><br><br>
-  <input id="jawatan" placeholder="Jawatan"><br><br>
-  <input id="jabatan" placeholder="Jabatan"><br><br>
-  <input id="status" placeholder="Status"><br><br>
-  <input type="file" id="file"><br><br>
+
+  <input id="nama" placeholder="Nama">
+  <input id="jawatan" placeholder="Jawatan">
+  <input id="jabatan" placeholder="Jabatan">
+  <input id="status" placeholder="Status">
+
   <button onclick="add()">Simpan</button>
 </div>
 
@@ -141,33 +172,55 @@ body{
 </div>
 
 </div>
+</div>
+</div>
 
 <script>
 
-const API="https://script.google.com/macros/s/AKfycbzEL7LnVfP5tPOAbrgBjSQUg-WyKqOWYqvTgEhkIcal74m8XnH79y99Em44eU9OLDWauQ/exec";
-let dataGlobal=[];
+/* ================= DATA SIMULASI (boleh connect Apps Script nanti) ================= */
+let dataGlobal = [
+  {nama:"Ali", jawatan:"Pegawai", jabatan:"Pentadbiran", status:"Hadir"},
+  {nama:"Siti", jawatan:"Pembantu", jabatan:"Kewangan", status:"Cuti"},
+  {nama:"Rahman", jawatan:"Pegawai", jabatan:"Pentadbiran", status:"Hadir"}
+];
 
-/* LOAD DATA */
-async function load(){
-  let res=await fetch(API,{
-    method:"POST",
-    body:JSON.stringify({action:"getData"})
-  });
+/* ================= LOGIN ================= */
+function login(){
+  let u = document.getElementById("u").value;
+  let p = document.getElementById("p").value;
 
-  dataGlobal=await res.json();
-
-  renderSummary();
-  renderList();
+  if(u && p){
+    sessionStorage.setItem("login","1");
+    document.getElementById("loginBox").style.display="none";
+    document.getElementById("app").style.display="block";
+    load();
+  } else {
+    alert("Isi login");
+  }
 }
 
-/* NAVIGATION */
+/* ================= LOGOUT ================= */
+function logout(){
+  sessionStorage.clear();
+  location.reload();
+}
+
+/* ================= NAV ================= */
 function show(id){
   document.querySelectorAll('.section').forEach(s=>s.style.display="none");
   document.getElementById(id).style.display="block";
 }
 
-/* SUMMARY */
+/* ================= LOAD ================= */
+function load(){
+  renderSummary();
+  renderList();
+  renderSearch();
+}
+
+/* ================= SUMMARY ================= */
 function renderSummary(){
+
   let group={};
 
   dataGlobal.forEach(d=>{
@@ -176,14 +229,15 @@ function renderSummary(){
 
   let html="";
   for(let j in group){
-    html+=`<div>🏢 ${j} : <b>${group[j]}</b></div>`;
+    html+=`<div>🏢 ${j}: <b>${group[j]}</b></div>`;
   }
 
   summaryBox.innerHTML=html;
 }
 
-/* LIST BY JABATAN */
+/* ================= LIST ================= */
 function renderList(){
+
   let group={};
 
   dataGlobal.forEach(d=>{
@@ -194,12 +248,13 @@ function renderList(){
   let html="";
 
   for(let j in group){
-    html+=`<h4>🏢 ${j}</h4>`;
+
+    html+=`<h3>🏢 ${j}</h3>`;
 
     group[j].forEach(p=>{
       html+=`
       <div class="card">
-        <img src="${p.gambar_url}">
+        <img src="https://via.placeholder.com/45">
         <div>
           <b>${p.nama}</b><br>
           ${p.jawatan} | ${p.status}
@@ -211,71 +266,59 @@ function renderList(){
   listBox.innerHTML=html;
 }
 
-/* SEARCH */
-function filterData(){
-  let k=searchInput.value.toLowerCase();
+/* ================= SEARCH ================= */
+function renderSearch(){
 
-  let filtered=dataGlobal.filter(d=>
-    d.nama.toLowerCase().includes(k) ||
-    d.jawatan.toLowerCase().includes(k)
-  );
+  searchInput.onkeyup=function(){
 
-  let html="";
+    let k=this.value.toLowerCase();
 
-  filtered.forEach(p=>{
-    html+=`
-    <div class="card">
-      <img src="${p.gambar_url}">
-      <div>
-        <b>${p.nama}</b><br>
-        ${p.jawatan} | ${p.status}
-      </div>
-    </div>`;
-  });
+    let f=dataGlobal.filter(d=>
+      d.nama.toLowerCase().includes(k) ||
+      d.jawatan.toLowerCase().includes(k)
+    );
 
-  searchResult.innerHTML=html;
+    let html="";
+
+    f.forEach(p=>{
+      html+=`
+      <div class="card">
+        <img src="https://via.placeholder.com/45">
+        <div>
+          <b>${p.nama}</b><br>
+          ${p.jawatan} | ${p.status}
+        </div>
+      </div>`;
+    });
+
+    searchResult.innerHTML=html;
+  };
 }
 
-/* ADD */
-async function add(){
-  let file=document.getElementById("file").files[0];
-  let base64="";
+/* ================= ADD ================= */
+function add(){
 
-  if(file){
-    base64=await toBase64(file);
-  }
-
-  await fetch(API,{
-    method:"POST",
-    body:JSON.stringify({
-      action:"add",
-      nama:nama.value,
-      jawatan:jawatan.value,
-      jabatan:jabatan.value,
-      status:status.value,
-      image_base64:base64
-    })
+  dataGlobal.push({
+    nama:nama.value,
+    jawatan:jawatan.value,
+    jabatan:jabatan.value,
+    status:status.value
   });
+
+  nama.value="";
+  jawatan.value="";
+  jabatan.value="";
+  status.value="";
 
   load();
 }
 
-/* BASE64 */
-function toBase64(file){
-  return new Promise(res=>{
-    let r=new FileReader();
-    r.readAsDataURL(file);
-    r.onload=()=>res(r.result.split(',')[1]);
-  });
+/* ================= INIT ================= */
+if(sessionStorage.getItem("login")==="1"){
+  loginBox.style.display="none";
+  app.style.display="block";
+  load();
 }
-
-/* LOGOUT */
-function logout(){
-  location.reload();
-}
-
-/* INIT */
-load();
 
 </script>
 
