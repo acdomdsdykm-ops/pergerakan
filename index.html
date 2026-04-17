@@ -3,13 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HRMIS MDS V4 STABLE</title>
+<title>HRMIS MDS V6 STABLE</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-
-/* ===== BACKGROUND KERAJAAN ===== */
 body{
   margin:0;
   font-family:Segoe UI;
@@ -17,29 +15,30 @@ body{
   color:white;
 }
 
-/* ===== LOGIN ===== */
+/* LOGIN */
 #login{
   width:320px;
-  margin:120px auto;
-  background:white;
-  color:black;
+  margin:100px auto;
+  background:#fff;
+  color:#000;
   padding:20px;
   border-radius:12px;
 }
 
-/* ===== APP ===== */
+/* APP */
 #app{display:none;}
 
-/* ===== TOPBAR ===== */
-.topbar{
+/* HEADER */
+.header{
   display:flex;
   justify-content:space-between;
   padding:15px;
-  background:rgba(0,0,0,0.35);
+  background:rgba(0,0,0,0.4);
+  align-items:center;
 }
 
-/* ===== LAYOUT ===== */
-.wrapper{
+/* LAYOUT */
+.container{
   display:flex;
 }
 
@@ -56,7 +55,7 @@ body{
   padding:10px;
   margin:5px 0;
   background:#0b3d2e;
-  color:white;
+  color:#fff;
   border:none;
   cursor:pointer;
 }
@@ -76,18 +75,19 @@ body{
 }
 
 /* INPUT */
-input{
+input,select{
   width:100%;
   padding:8px;
   margin:5px 0;
+  border-radius:5px;
+  border:none;
 }
 
 /* MOBILE */
 @media(max-width:768px){
-  .wrapper{flex-direction:column;}
+  .container{flex-direction:column;}
   .sidebar{width:100%;}
 }
-
 </style>
 </head>
 
@@ -104,17 +104,17 @@ input{
 <!-- ================= APP ================= -->
 <div id="app">
 
-<div class="topbar">
-<div>🏛️ HRMIS MDS V4 STABLE</div>
+<div class="header">
+<div>🏛️ HRMIS MDS V6</div>
 <button onclick="logout()">Logout</button>
 </div>
 
-<div class="wrapper">
+<div class="container">
 
 <!-- SIDEBAR -->
 <div class="sidebar">
 <button onclick="load()">📊 Dashboard</button>
-<button onclick="toggleAdd()">➕ Tambah Pegawai</button>
+<button onclick="toggleForm()">➕ Tambah Pegawai</button>
 <button onclick="load()">🔄 Refresh</button>
 </div>
 
@@ -123,8 +123,13 @@ input{
 
 <!-- KPI -->
 <div class="panel">
-<h3>📊 KPI Dashboard</h3>
+<h3>📊 KPI Kehadiran</h3>
 <canvas id="chart"></canvas>
+</div>
+
+<!-- SEARCH -->
+<div class="panel">
+<input id="search" placeholder="🔍 Cari pegawai..." oninput="renderList()">
 </div>
 
 <!-- LIST -->
@@ -133,14 +138,19 @@ input{
 <div id="list"></div>
 </div>
 
-<!-- ADD -->
-<div class="panel" id="addBox" style="display:none;">
+<!-- FORM -->
+<div class="panel" id="form" style="display:none;">
 <h3>➕ Tambah Pegawai</h3>
 
 <input id="nama" placeholder="Nama">
 <input id="jawatan" placeholder="Jawatan">
 <input id="jabatan" placeholder="Jabatan">
-<input id="status" placeholder="Status (Hadir/Cuti)">
+
+<select id="status">
+<option value="Hadir">Hadir</option>
+<option value="Cuti">Cuti</option>
+</select>
+
 <input id="catatan" placeholder="Catatan">
 
 <button onclick="add()">Simpan</button>
@@ -154,47 +164,39 @@ input{
 /* ================= CONFIG ================= */
 const API = "https://script.google.com/macros/s/AKfycbz8AbgDVWJlBrYantzBwtxXJHv0sUM5zFi0AGkEiMMpohVMFm5r9EENvlIlc0gN99Bt6A/exec";
 
-/* ================= SAFE API (ANTI NETWORK ERROR) ================= */
+let DATA = [];
+let chartInstance;
+
+/* ================= API ================= */
 async function api(payload){
 
-  const res = await fetch(API,{
-    method:"POST",
-    headers:{
-      "Content-Type":"application/json"
-    },
-    body: JSON.stringify(payload)
-  });
-
-  return await res.json();
-}
+  try{
+    const res = await fetch(API,{
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify(payload)
+    });
 
     if(!res.ok) throw new Error("HTTP "+res.status);
 
     return await res.json();
 
   }catch(err){
-
-    console.log("API FAIL:",err);
-
-    if(retry>0){
-      return await api(payload,retry-1);
-    }
-
-    alert("Sistem API gagal sambung. Sila semak Apps Script deploy.");
+    console.log(err);
+    alert("API tidak dapat disambungkan");
   }
 }
 
 /* ================= LOGIN ================= */
 async function login(){
 
-  let r = await api({
+  const r = await api({
     action:"login",
-    username:u.value,
-    password:p.value
+    username: u.value,
+    password: p.value
   });
 
   if(r && r.status==="ok"){
-    sessionStorage.setItem("role",r.role);
     login.style.display="none";
     app.style.display="block";
     load();
@@ -206,33 +208,44 @@ async function login(){
 /* ================= LOAD DATA ================= */
 async function load(){
 
-  let d = await api({action:"getPegawai"});
+  const d = await api({action:"getPegawai"});
   if(!d) return;
 
-  let html="";
-  let hadir=0, cuti=0;
+  DATA = d;
+  renderList();
+  renderChart();
+}
 
-  d.forEach(x=>{
+/* ================= RENDER LIST ================= */
+function renderList(){
 
-    html+=`
+  const keyword = (search.value || "").toLowerCase();
+
+  let html = "";
+
+  DATA
+  .filter(x => (x.nama||"").toLowerCase().includes(keyword))
+  .forEach(x=>{
+
+    html += `
       <div style="padding:6px;border-bottom:1px solid #ccc">
         ${x.nama} - ${x.jawatan} (${x.status})
       </div>
     `;
-
-    if(x.status==="Hadir") hadir++;
-    if(x.status==="Cuti") cuti++;
   });
 
   list.innerHTML = html;
-
-  renderChart(hadir,cuti);
 }
 
 /* ================= CHART ================= */
-function renderChart(hadir,cuti){
+function renderChart(){
 
-  new Chart(chart,{
+  let hadir = DATA.filter(x=>x.status==="Hadir").length;
+  let cuti  = DATA.filter(x=>x.status==="Cuti").length;
+
+  if(chartInstance) chartInstance.destroy();
+
+  chartInstance = new Chart(chart,{
     type:"bar",
     data:{
       labels:["Hadir","Cuti"],
@@ -242,10 +255,15 @@ function renderChart(hadir,cuti){
       }]
     }
   });
-
 }
 
-/* ================= ADD PEGAWAI ================= */
+/* ================= TOGGLE FORM ================= */
+function toggleForm(){
+  const f = document.getElementById("form");
+  f.style.display = (f.style.display==="block") ? "none":"block";
+}
+
+/* ================= ADD ================= */
 async function add(){
 
   await api({
@@ -257,17 +275,11 @@ async function add(){
     catatan:catatan.value
   });
 
-  toggleAdd();
+  toggleForm();
   load();
 }
 
-/* ================= UI TOGGLE ================= */
-function toggleAdd(){
-  addBox.style.display =
-  addBox.style.display==="none" ? "block":"none";
-}
-
-/* ================= LOGOUT (FULL RESET FIX) ================= */
+/* ================= LOGOUT ================= */
 function logout(){
   sessionStorage.clear();
   localStorage.clear();
