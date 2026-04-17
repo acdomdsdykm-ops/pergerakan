@@ -1,130 +1,488 @@
 <!DOCTYPE html>
-<html>
+<html lang="ms">
 <head>
-  <base target="_top">
-  <style>
-    body { font-family: Arial; padding: 20px; background:#f4f6f9; }
-    .card { background:white; padding:15px; margin:10px; border-radius:10px; }
-    img { width:100%; height:180px; object-fit:cover; }
-    input, select, button { padding:10px; margin:5px; width:100%; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HR System Pro Full</title>
+
+<style>
+:root{
+--bg:#0b1220;
+--panel:#111827;
+--panel2:#0f172a;
+--blue:#3b82f6;
+--green:#22c55e;
+--yellow:#f59e0b;
+--red:#ef4444;
+--text:#e5e7eb;
+}
+
+*{box-sizing:border-box;font-family:system-ui;}
+
+body{
+margin:0;
+background:var(--bg);
+color:var(--text);
+}
+
+/* LOGIN */
+#loginPage{
+height:100vh;
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+gap:10px;
+background:radial-gradient(circle,#1e293b,#0b1220);
+}
+
+input,select,button{
+width:260px;
+padding:10px;
+border:none;
+border-radius:10px;
+background:var(--panel);
+color:white;
+outline:none;
+}
+
+button{
+background:var(--blue);
+cursor:pointer;
+font-weight:600;
+}
+button:hover{opacity:0.85;}
+
+/* LAYOUT */
+.main{display:none;height:100vh;}
+.container{display:flex;height:100vh;}
+
+/* SIDEBAR */
+.sidebar{
+width:230px;
+background:var(--panel2);
+padding:15px;
+}
+
+.menu{
+padding:12px;
+border-radius:10px;
+cursor:pointer;
+margin-bottom:8px;
+}
+.menu:hover{background:#1f2937;}
+.menu.active{background:var(--blue);}
+
+/* PAGE */
+.page{
+flex:1;
+padding:20px;
+overflow:auto;
+display:none;
+}
+
+/* KPI */
+.kpi-grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+gap:12px;
+margin-top:10px;
+}
+
+.kpi{
+background:var(--panel);
+padding:15px;
+border-radius:14px;
+text-align:center;
+}
+
+/* STAFF */
+.staff-card{
+display:flex;
+justify-content:space-between;
+align-items:center;
+background:var(--panel);
+padding:14px;
+border-radius:14px;
+margin-bottom:10px;
+}
+
+.left{display:flex;gap:12px;align-items:center;}
+
+.avatar{
+width:48px;height:48px;border-radius:50%;
+object-fit:cover;border:2px solid var(--blue);
+}
+
+.status{
+font-size:11px;
+padding:5px 10px;
+border-radius:999px;
+cursor:pointer;
+display:inline-block;
+margin-top:4px;
+}
+
+.hadir{background:var(--green);}
+.cuti{background:var(--yellow);color:black;}
+.tiada{background:var(--red);}
+.urusan{background:var(--blue);}
+
+.actions button{
+width:32px;height:32px;
+margin-left:5px;
+border:none;
+border-radius:8px;
+cursor:pointer;
+}
+
+.edit{background:var(--blue);}
+.delete{background:var(--red);}
+
+/* TABLE */
+table{
+width:100%;
+border-collapse:collapse;
+background:var(--panel);
+border-radius:12px;
+overflow:hidden;
+}
+
+th,td{
+padding:12px;
+border-bottom:1px solid #1f2937;
+font-size:14px;
+}
+
+th{
+background:#1f2937;
+text-align:left;
+}
+
+.filters{
+display:flex;
+gap:10px;
+flex-wrap:wrap;
+margin-bottom:12px;
+}
+
+.small{opacity:0.7;font-size:13px;}
+</style>
 </head>
 
 <body>
 
-<h2>Sistem Pemantauan Staf</h2>
-
-<div id="adminPanel" style="display:none">
-  <h3>Admin Panel - Tambah Staf</h3>
-
-  <input id="nama" placeholder="Nama">
-  <input id="jawatan" placeholder="Jawatan">
-  <input id="bahagian" placeholder="Bahagian">
-  <input type="file" id="photo">
-
-  <button onclick="addStaff()">Tambah Staf</button>
-
-  <hr>
-
-  <h3>Update Status</h3>
-
-  <select id="staffList"></select>
-
-  <select id="status">
-    <option>Ada</option>
-    <option>Tiada</option>
-    <option>Cuti</option>
-    <option>Urusan Rasmi di Luar</option>
-  </select>
-
-  <input id="catatan" placeholder="Catatan">
-
-  <button onclick="updateStatus()">Update Status</button>
+<!-- LOGIN -->
+<div id="loginPage">
+<h2>HR SYSTEM PRO</h2>
+<input id="user" placeholder="username">
+<input id="pass" type="password" placeholder="password">
+<button onclick="login()">Login</button>
 </div>
 
-<hr>
+<!-- MAIN -->
+<div class="main">
+<div class="container">
 
-<div id="list"></div>
+<!-- SIDEBAR -->
+<div class="sidebar">
+<div class="menu active" onclick="show('dashboard',this)">Dashboard</div>
+<div class="menu" onclick="show('staff',this)">Staff</div>
+<div class="menu" onclick="show('add',this)">Add Staff</div>
+<div class="menu" onclick="show('report',this)">Report</div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="page" id="dashboard">
+<h2>Dashboard</h2>
+<div class="small" id="clock"></div>
+
+<div class="kpi-grid">
+<div class="kpi">Total <h3 id="total">0</h3></div>
+<div class="kpi">Hadir <h3 id="hadir">0</h3></div>
+<div class="kpi">Cuti <h3 id="cuti">0</h3></div>
+<div class="kpi">Tiada <h3 id="tiada">0</h3></div>
+<div class="kpi">Urusan <h3 id="urusan">0</h3></div>
+</div>
+</div>
+
+<!-- STAFF -->
+<div class="page" id="staff">
+<input id="search" placeholder="Search nama..." oninput="render()">
+<div id="staffView"></div>
+</div>
+
+<!-- ADD -->
+<div class="page" id="add">
+<h2>Add / Edit Staff</h2>
+
+<input id="name" placeholder="Nama">
+<input id="job" placeholder="Jawatan">
+<input id="dept" placeholder="Bahagian">
+<input type="file" id="photo">
+
+<select id="status">
+<option>Hadir</option>
+<option>Cuti</option>
+<option>Tiada</option>
+<option>Urusan Rasmi Di Luar</option>
+</select>
+
+<button onclick="saveStaff()">Simpan</button>
+</div>
+
+<!-- REPORT -->
+<div class="page" id="report">
+<h2>Report</h2>
+
+<div class="filters">
+<select id="filterDate" onchange="renderReport()"></select>
+<select id="filterDept" onchange="renderReport()"></select>
+</div>
+
+<table>
+<thead>
+<tr>
+<th>Nama</th>
+<th>Jawatan</th>
+<th>Bahagian</th>
+<th>Tarikh</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody id="reportBody"></tbody>
+</table>
+</div>
+
+</div>
+</div>
 
 <script>
-let USER_EMAIL = Session.getActiveUser().getEmail(); // Apps Script auto email
-let ROLE = "";
 
-function init() {
-  google.script.run.withSuccessHandler(role => {
-    ROLE = role;
+let staff = JSON.parse(localStorage.getItem("hr")) || [];
+let reports = JSON.parse(localStorage.getItem("hr_reports")) || {};
+let editId = null;
 
-    if (ROLE === "admin") {
-      document.getElementById("adminPanel").style.display = "block";
-    }
-
-    loadStaff();
-  }).getRole(USER_EMAIL);
+/* LOGIN */
+function login(){
+if(user.value==="admin" && pass.value==="1234"){
+loginPage.style.display="none";
+document.querySelector(".main").style.display="flex";
+show("dashboard");
+}else alert("Login salah");
 }
 
-function loadStaff() {
-  google.script.run.withSuccessHandler(staff => {
-    google.script.run.withSuccessHandler(statusMap => {
+/* NAV */
+function show(id,el){
+document.querySelectorAll(".page").forEach(p=>p.style.display="none");
+document.getElementById(id).style.display="block";
 
-      let html = "";
-      let dropdown = "";
+document.querySelectorAll(".menu").forEach(m=>m.classList.remove("active"));
+if(el) el.classList.add("active");
 
-      staff.forEach(s => {
-        let st = statusMap[s.id] || {status:"-", catatan:""};
-
-        html += `
-          <div class="card">
-            <img src="${s.photo}">
-            <h3>${s.nama}</h3>
-            <p>${s.jawatan} - ${s.bahagian}</p>
-            <p><b>Status:</b> ${st.status}</p>
-            <p>${st.catatan || ""}</p>
-          </div>
-        `;
-
-        dropdown += `<option value="${s.id}">${s.nama}</option>`;
-      });
-
-      document.getElementById("list").innerHTML = html;
-      document.getElementById("staffList").innerHTML = dropdown;
-
-    }).getStatus();
-
-  }).getStaff();
+render();
+if(id==="report") renderReport();
 }
 
-function addStaff() {
-  let file = document.getElementById("photo").files[0];
+/* SAVE STAFF (FIXED ROOT) */
+function saveStaff(){
 
-  let reader = new FileReader();
-  reader.onload = function(e) {
+const nameEl=document.getElementById("name");
+const jobEl=document.getElementById("job");
+const deptEl=document.getElementById("dept");
+const photoEl=document.getElementById("photo");
+const statusEl=document.getElementById("status");
 
-    google.script.run.addStaff({
-      nama: nama.value,
-      jawatan: jawatan.value,
-      bahagian: bahagian.value,
-      photo: e.target.result
-    }, USER_EMAIL);
-
-    alert("Berjaya tambah staf");
-    loadStaff();
-  };
-
-  reader.readAsDataURL(file);
+if(!nameEl.value.trim()){
+alert("Nama wajib isi");
+return;
 }
 
-function updateStatus() {
-  google.script.run.updateStatus({
-    id: staffList.value,
-    status: status.value,
-    catatan: catatan.value
-  }, USER_EMAIL);
+let file = photoEl.files[0];
 
-  alert("Status dikemaskini");
-  loadStaff();
+function commit(img){
+
+if(editId){
+
+let s = staff.find(x=>x.id===editId);
+if(!s) return;
+
+s.name=nameEl.value;
+s.job=jobEl.value;
+s.dept=deptEl.value;
+s.status=statusEl.value;
+if(img) s.photo=img;
+
+editId=null;
+
+}else{
+
+staff.push({
+id:Date.now(),
+name:nameEl.value,
+job:jobEl.value,
+dept:deptEl.value,
+status:statusEl.value,
+photo:img||"https://i.pravatar.cc/150",
+date:new Date().toISOString().split("T")[0]
+});
 }
 
-init();
+localStorage.setItem("hr",JSON.stringify(staff));
+
+nameEl.value="";
+jobEl.value="";
+deptEl.value="";
+photoEl.value="";
+
+show("staff");
+}
+
+if(file){
+let r=new FileReader();
+r.onload=()=>commit(r.result);
+r.readAsDataURL(file);
+}else commit();
+}
+
+/* DELETE */
+function del(id){
+if(!confirm("Padam staff ini?")) return;
+staff=staff.filter(s=>s.id!==id);
+localStorage.setItem("hr",JSON.stringify(staff));
+render();
+}
+
+/* EDIT */
+function edit(id){
+let s=staff.find(x=>x.id===id);
+if(!s) return;
+
+name.value=s.name;
+job.value=s.job;
+dept.value=s.dept;
+status.value=s.status;
+
+editId=id;
+show("add");
+}
+
+/* STATUS */
+function toggleStatus(id){
+let order=["Hadir","Cuti","Tiada","Urusan Rasmi Di Luar"];
+let i=staff.findIndex(s=>s.id===id);
+staff[i].status=order[(order.indexOf(staff[i].status)+1)%order.length];
+localStorage.setItem("hr",JSON.stringify(staff));
+render();
+}
+
+/* REPORT */
+function saveReport(){
+let today=new Date().toISOString().split("T")[0];
+reports[today]=staff.map(s=>({...s}));
+localStorage.setItem("hr_reports",JSON.stringify(reports));
+}
+
+function renderReport(){
+
+let dates=Object.keys(reports).sort().reverse();
+
+filterDate.innerHTML=
+`<option value="all">All Date</option>`+
+dates.map(d=>`<option value="${d}">${d}</option>`).join("");
+
+let all=Object.values(reports).flat();
+
+let depts=[...new Set(all.map(s=>s.dept))];
+
+filterDept.innerHTML=
+`<option value="all">All Dept</option>`+
+depts.map(d=>`<option value="${d}">${d}</option>`).join("");
+
+let date=filterDate.value;
+let dept=filterDept.value;
+
+let data=date==="all"?all:reports[date]||[];
+if(dept!=="all") data=data.filter(s=>s.dept===dept);
+
+reportBody.innerHTML=data.map(s=>`
+<tr>
+<td>${s.name}</td>
+<td>${s.job}</td>
+<td>${s.dept}</td>
+<td>${s.date}</td>
+<td>${s.status}</td>
+</tr>
+`).join("");
+}
+
+/* RENDER */
+function render(){
+
+clock.innerText=new Date().toLocaleString();
+
+total.innerText=staff.length;
+hadir.innerText=staff.filter(s=>s.status==="Hadir").length;
+cuti.innerText=staff.filter(s=>s.status==="Cuti").length;
+tiada.innerText=staff.filter(s=>s.status==="Tiada").length;
+urusan.innerText=staff.filter(s=>s.status==="Urusan Rasmi Di Luar").length;
+
+let keyword=(search.value||"").toLowerCase();
+
+let group={};
+
+staff.filter(s=>s.name.toLowerCase().includes(keyword))
+.forEach(s=>{
+if(!group[s.dept]) group[s.dept]=[];
+group[s.dept].push(s);
+});
+
+let html="";
+
+for(let d in group){
+html+=`<h3>${d||"-"}</h3>`;
+
+group[d].forEach(s=>{
+
+let cls=
+s.status==="Hadir"?"hadir":
+s.status==="Cuti"?"cuti":
+s.status==="Tiada"?"tiada":"urusan";
+
+html+=`
+<div class="staff-card">
+<div class="left">
+<img class="avatar" src="${s.photo}">
+<div>
+<b>${s.name}</b><br>
+<small>${s.job}</small><br>
+<small>${s.dept}</small><br>
+
+<span class="status ${cls}" onclick="toggleStatus(${s.id})">
+${s.status}
+</span>
+</div>
+</div>
+
+<div class="actions">
+<button class="edit" onclick="edit(${s.id})">✏️</button>
+<button class="delete" onclick="del(${s.id})">🗑️</button>
+</div>
+</div>`;
+});
+}
+
+staffView.innerHTML=html;
+
+saveReport();
+localStorage.setItem("hr",JSON.stringify(staff));
+}
+
+/* INIT */
+show("dashboard");
+
+setInterval(()=>render(),1000);
+
 </script>
 
 </body>
