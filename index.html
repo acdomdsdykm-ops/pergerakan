@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sistem Pergerakan V2</title>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <style>
 body{
   margin:0;
@@ -25,7 +23,7 @@ body{
   border:1px solid #d9e1ea;
 }
 
-/* APP WRAPPER */
+/* APP */
 #app{
   display:none;
   max-width:1200px;
@@ -40,10 +38,17 @@ body{
 .header{
   background:#0a2a43;
   color:#fff;
-  padding:16px;
+  padding:14px 18px;
   display:flex;
   justify-content:space-between;
   align-items:center;
+}
+
+/* DATETIME (NEW) */
+.datetime{
+  font-size:18px;
+  font-weight:600;
+  letter-spacing:0.5px;
 }
 
 /* LAYOUT */
@@ -75,33 +80,13 @@ body{
   background:#f3f6fb;
 }
 
-/* PANELS */
+/* PANEL */
 .panel{
   background:#fff;
   padding:15px;
   border-radius:10px;
   margin-bottom:14px;
   border:1px solid #e5eaf0;
-}
-
-/* KPI */
-.kpi{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:12px;
-}
-
-.kpi-box{
-  background:linear-gradient(135deg,#0a2a43,#1c5c8a);
-  color:#fff;
-  padding:15px;
-  border-radius:10px;
-  text-align:center;
-}
-
-.kpi-box h2{
-  margin:5px 0 0;
-  font-size:26px;
 }
 
 /* TABLE */
@@ -121,18 +106,6 @@ th{
   text-align:left;
 }
 
-/* STATUS BADGE */
-.badge{
-  padding:4px 8px;
-  border-radius:6px;
-  font-size:12px;
-  color:#fff;
-}
-
-.pending{background:#f59e0b}
-.approved{background:#10b981}
-.done{background:#3b82f6}
-
 /* INPUT */
 input,select{
   width:100%;
@@ -146,7 +119,6 @@ input,select{
 @media(max-width:900px){
   .container{flex-direction:column}
   .sidebar{width:100%}
-  .kpi{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -164,9 +136,14 @@ input,select{
 <!-- APP -->
 <div id="app">
 
+<!-- HEADER WITH DATETIME -->
 <div class="header">
-<div>🏛 Sistem Pergerakan V2</div>
-<button onclick="logout()">Logout</button>
+  <div>🏛 Sistem Pergerakan V2</div>
+
+  <!-- LIVE DATE TIME -->
+  <div class="datetime" id="datetime">--:--:--</div>
+
+  <button onclick="logout()">Logout</button>
 </div>
 
 <div class="container">
@@ -180,48 +157,45 @@ input,select{
 <!-- MAIN -->
 <div class="main">
 
-<!-- KPI -->
-<div class="panel">
-<h3>📊 Dashboard</h3>
-<div class="kpi">
-<div class="kpi-box"><div>Total</div><h2 id="total">0</h2></div>
-<div class="kpi-box"><div>Pending</div><h2 id="pending">0</h2></div>
-<div class="kpi-box"><div>Approved</div><h2 id="approved">0</h2></div>
-</div>
-</div>
-
-<!-- SEARCH -->
-<div class="panel">
-<input id="search" placeholder="Cari rekod..." oninput="render()">
-</div>
-
 <!-- TABLE -->
 <div class="panel">
+<h3>Rekod Pergerakan</h3>
+
 <table>
 <thead>
 <tr>
-<th>ID</th>
+<th>Gambar</th>
 <th>Nama</th>
+<th>Jawatan</th>
 <th>Status</th>
-<th>Tindakan</th>
+<th>Catatan</th>
 </tr>
 </thead>
+
 <tbody id="list"></tbody>
 </table>
 </div>
 
 <!-- FORM -->
 <div class="panel" id="form" style="display:none;">
-<h3>Rekod Pergerakan Baru</h3>
+<h3>Rekod Baru</h3>
+
+<input type="file" id="photo">
 
 <input id="nama" placeholder="Nama">
+
+<input id="jawatan" placeholder="Jawatan">
+
 <select id="status">
-<option>Pending</option>
-<option>Approved</option>
-<option>Done</option>
+  <option value="Ada">Ada</option>
+  <option value="Tiada">Tiada</option>
+  <option value="Cuti">Cuti</option>
+  <option value="Urusan Rasmi di Luar">Urusan Rasmi di Luar</option>
 </select>
 
-<button onclick="add()">Simpan</button>
+<input id="catatan" placeholder="Catatan">
+
+<button onclick="add()">Simpan Rekod</button>
 </div>
 
 </div>
@@ -230,22 +204,9 @@ input,select{
 
 <script>
 
-const API = "https://script.google.com/macros/s/AKfycbyNmIrv1ifNBiCeIuLy92qmt9uHp-16FyEXvEaKEptE4HeptYc0JKHpukSMT6grTKBz2g/exec";
+const API = "YOUR_SCRIPT_URL";
 
 let DATA = [];
-
-/* ================= API ================= */
-async function api(payload){
-
-  const form = new URLSearchParams();
-
-  for(const k in payload){
-    form.append(k, payload[k]);
-  }
-
-  const res = await fetch(API,{method:"POST",body:form});
-  return res.json();
-}
 
 /* ================= LOGIN ================= */
 function login(){
@@ -257,68 +218,85 @@ function login(){
 
 /* ================= LOAD ================= */
 async function load(){
-
   DATA = await (await fetch(API+"?action=getData")).json();
-
-  updateKPI();
   render();
 }
 
-/* ================= KPI ================= */
-function updateKPI(){
-
-  total.innerText = DATA.length;
-  pending.innerText = DATA.filter(x=>x.status==="Pending").length;
-  approved.innerText = DATA.filter(x=>x.status==="Approved").length;
-}
-
-/* ================= RENDER TABLE ================= */
+/* ================= RENDER ================= */
 function render(){
 
-  const k = search.value.toLowerCase();
+  list.innerHTML = DATA.map(x=>`
 
-  list.innerHTML = DATA
-    .filter(x => (x.nama||"").toLowerCase().includes(k))
-    .map(x=>`
-      <tr>
-        <td>${x.id}</td>
-        <td>${x.nama}</td>
-        <td>
-          <span class="badge ${
-            x.status==="Pending"?"pending":
-            x.status==="Approved"?"approved":"done"
-          }">${x.status}</span>
-        </td>
-        <td>
-          <button onclick="approve('${x.id}')">Approve</button>
-        </td>
-      </tr>
-    `).join("");
+    <tr>
+      <td>
+        ${x.photo ? `<img src="${x.photo}" style="width:38px;height:38px;border-radius:50%">` : ""}
+      </td>
+
+      <td>${x.nama || "-"}</td>
+      <td>${x.jawatan || "-"}</td>
+      <td>${x.status || "-"}</td>
+      <td>${x.catatan || "-"}</td>
+    </tr>
+
+  `).join("");
 }
 
 /* ================= ADD ================= */
 async function add(){
 
-  await api({
-    action:"add",
-    nama:nama.value,
-    status:status.value
+  const file = photo.files[0];
+
+  let img = "";
+
+  if(file){
+    img = await new Promise(resolve=>{
+      const reader = new FileReader();
+      reader.onload = ()=>resolve(reader.result);
+      reader.readAsDataURL(file);
+    });
+  }
+
+  await fetch(API,{
+    method:"POST",
+    body: new URLSearchParams({
+      action:"add",
+      nama:nama.value,
+      jawatan:jawatan.value,
+      status:status.value,
+      catatan:catatan.value,
+      photo:img
+    })
   });
+
+  nama.value="";
+  jawatan.value="";
+  catatan.value="";
+  photo.value="";
 
   toggleForm();
   load();
 }
 
-/* ================= APPROVE ================= */
-async function approve(id){
+/* ================= DATETIME LIVE ================= */
+function updateTime(){
 
-  await api({
-    action:"approve",
-    id:id
-  });
+  const now = new Date();
 
-  load();
+  const options = {
+    weekday:'long',
+    year:'numeric',
+    month:'long',
+    day:'numeric'
+  };
+
+  const date = now.toLocaleDateString('ms-MY', options);
+  const time = now.toLocaleTimeString('ms-MY');
+
+  document.getElementById("datetime").innerHTML = date + " | " + time;
 }
+
+setInterval(updateTime,1000);
+updateTime();
 
 /* ================= UI ================= */
 function toggleForm(){
@@ -329,11 +307,6 @@ function logout(){
   localStorage.clear();
   location.reload();
 }
-
-/* ================= AUTO REFRESH ================= */
-setInterval(()=>{
-  if(app.style.display==="block") load();
-},10000);
 
 </script>
 
