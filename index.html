@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<title>Pergerakan Pegawai</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+  margin:0;
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #1e3c72, #2a5298);
+  color: #fff;
+}
+
+.container {
+  max-width: 1100px;
+  margin: auto;
+  padding: 20px;
+}
+
+.glass {
+  background: rgba(255,255,255,0.1);
+  border-radius: 15px;
+  backdrop-filter: blur(10px);
+  padding: 20px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+}
+
+h1 {
+  text-align:center;
+}
+
+.login-box {
+  max-width: 300px;
+  margin: 100px auto;
+}
+
+input, select {
+  width:100%;
+  padding:10px;
+  margin:10px 0;
+  border:none;
+  border-radius:8px;
+}
+
+button {
+  width:100%;
+  padding:10px;
+  background:#00c6ff;
+  border:none;
+  border-radius:8px;
+  color:#fff;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+button:hover {
+  background:#0072ff;
+}
+
+.table {
+  margin-top:20px;
+}
+
+.card {
+  display:flex;
+  align-items:center;
+  margin-bottom:15px;
+  padding:15px;
+  border-radius:12px;
+  background: rgba(255,255,255,0.08);
+}
+
+.card img {
+  width:60px;
+  height:60px;
+  border-radius:50%;
+  margin-right:15px;
+  object-fit:cover;
+}
+
+.badge {
+  padding:5px 10px;
+  border-radius:20px;
+  font-size:12px;
+}
+
+.hadir { background:#00c851; }
+.cuti { background:#ffbb33; }
+.tiada { background:#ff4444; }
+
+.hidden {
+  display:none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<!-- LOGIN -->
+<div id="loginPage" class="glass login-box">
+  <h2>Login</h2>
+  <input type="text" id="username" placeholder="Username">
+  <input type="password" id="password" placeholder="Password">
+  <select id="role">
+    <option value="admin">Admin</option>
+    <option value="user">User</option>
+    <option value="jabatan">Jabatan</option>
+  </select>
+  <button onclick="login()">Login</button>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard" class="hidden">
+  <h1>📊 Pergerakan Pegawai</h1>
+
+  <div class="glass table" id="dataContainer"></div>
+</div>
+
+</div>
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbz3sj7zDnAxQ1ow3I6Z-L-X115IVidKVwMf9YzdRAzJDCKZoqTA5JFLo9h6rORleGH1uQ/exec";
+
+// Dummy login (boleh sambung DB kemudian)
+function login() {
+  let user = document.getElementById("username").value;
+  let pass = document.getElementById("password").value;
+  let role = document.getElementById("role").value;
+
+  if(user && pass){
+    localStorage.setItem("role", role);
+    document.getElementById("loginPage").classList.add("hidden");
+    document.getElementById("dashboard").classList.remove("hidden");
+    loadData();
+  } else {
+    alert("Sila isi maklumat");
+  }
+}
+
+async function loadData() {
+  const res = await fetch(API_URL);
+  const data = await res.json();
+
+  let container = document.getElementById("dataContainer");
+  container.innerHTML = "";
+
+  data.forEach(d => {
+    let statusClass = d.status.toLowerCase();
+
+    container.innerHTML += `
+      <div class="card">
+        <img src="${d.gambar_url}" alt="gambar">
+        <div style="flex:1">
+          <strong>${d.nama}</strong><br>
+          <small>${d.jawatan}</small><br>
+          <span class="badge ${statusClass}">${d.status}</span>
+          <p>${d.catatan}</p>
+        </div>
+      </div>
+    `;
+  });
+}
+</script>
+
+</body>
+</html>
