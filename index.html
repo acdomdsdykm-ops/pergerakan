@@ -1,313 +1,130 @@
 <!DOCTYPE html>
-<html lang="ms">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sistem Pergerakan V2</title>
-
-<style>
-body{
-  margin:0;
-  font-family:"Segoe UI", Arial;
-  background:#eef2f6;
-  color:#1a1a1a;
-}
-
-/* LOGIN */
-#loginBox{
-  width:360px;
-  margin:120px auto;
-  background:#fff;
-  padding:25px;
-  border-radius:10px;
-  border:1px solid #d9e1ea;
-}
-
-/* APP */
-#app{
-  display:none;
-  max-width:1200px;
-  margin:25px auto;
-  background:#fff;
-  border-radius:12px;
-  overflow:hidden;
-  border:1px solid #d9e1ea;
-}
-
-/* HEADER */
-.header{
-  background:#0a2a43;
-  color:#fff;
-  padding:14px 18px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-
-/* DATETIME (NEW) */
-.datetime{
-  font-size:18px;
-  font-weight:600;
-  letter-spacing:0.5px;
-}
-
-/* LAYOUT */
-.container{display:flex}
-
-/* SIDEBAR */
-.sidebar{
-  width:220px;
-  background:#f6f8fb;
-  border-right:1px solid #e2e8f0;
-  padding:12px;
-}
-
-.sidebar button{
-  width:100%;
-  padding:10px;
-  margin:6px 0;
-  border:none;
-  background:#0a2a43;
-  color:#fff;
-  border-radius:6px;
-  cursor:pointer;
-}
-
-/* MAIN */
-.main{
-  flex:1;
-  padding:18px;
-  background:#f3f6fb;
-}
-
-/* PANEL */
-.panel{
-  background:#fff;
-  padding:15px;
-  border-radius:10px;
-  margin-bottom:14px;
-  border:1px solid #e5eaf0;
-}
-
-/* TABLE */
-table{
-  width:100%;
-  border-collapse:collapse;
-}
-
-th,td{
-  padding:10px;
-  border-bottom:1px solid #eee;
-  font-size:14px;
-}
-
-th{
-  background:#f1f5f9;
-  text-align:left;
-}
-
-/* INPUT */
-input,select{
-  width:100%;
-  padding:9px;
-  margin:5px 0;
-  border-radius:6px;
-  border:1px solid #cfd8e3;
-}
-
-/* MOBILE */
-@media(max-width:900px){
-  .container{flex-direction:column}
-  .sidebar{width:100%}
-}
-</style>
+  <base target="_top">
+  <style>
+    body { font-family: Arial; padding: 20px; background:#f4f6f9; }
+    .card { background:white; padding:15px; margin:10px; border-radius:10px; }
+    img { width:100%; height:180px; object-fit:cover; }
+    input, select, button { padding:10px; margin:5px; width:100%; }
+  </style>
 </head>
 
 <body>
 
-<!-- LOGIN -->
-<div id="loginBox">
-<h3>LOGIN SISTEM PERGERAKAN</h3>
-<input id="u" placeholder="Username">
-<input id="p" type="password" placeholder="Password">
-<button onclick="login()">Login</button>
+<h2>Sistem Pemantauan Staf</h2>
+
+<div id="adminPanel" style="display:none">
+  <h3>Admin Panel - Tambah Staf</h3>
+
+  <input id="nama" placeholder="Nama">
+  <input id="jawatan" placeholder="Jawatan">
+  <input id="bahagian" placeholder="Bahagian">
+  <input type="file" id="photo">
+
+  <button onclick="addStaff()">Tambah Staf</button>
+
+  <hr>
+
+  <h3>Update Status</h3>
+
+  <select id="staffList"></select>
+
+  <select id="status">
+    <option>Ada</option>
+    <option>Tiada</option>
+    <option>Cuti</option>
+    <option>Urusan Rasmi di Luar</option>
+  </select>
+
+  <input id="catatan" placeholder="Catatan">
+
+  <button onclick="updateStatus()">Update Status</button>
 </div>
 
-<!-- APP -->
-<div id="app">
+<hr>
 
-<!-- HEADER WITH DATETIME -->
-<div class="header">
-  <div>🏛 Sistem Pergerakan V2</div>
-
-  <!-- LIVE DATE TIME -->
-  <div class="datetime" id="datetime">--:--:--</div>
-
-  <button onclick="logout()">Logout</button>
-</div>
-
-<div class="container">
-
-<!-- SIDEBAR -->
-<div class="sidebar">
-<button onclick="load()">Dashboard</button>
-<button onclick="toggleForm()">+ Rekod Baru</button>
-</div>
-
-<!-- MAIN -->
-<div class="main">
-
-<!-- TABLE -->
-<div class="panel">
-<h3>Rekod Pergerakan</h3>
-
-<table>
-<thead>
-<tr>
-<th>Gambar</th>
-<th>Nama</th>
-<th>Jawatan</th>
-<th>Status</th>
-<th>Catatan</th>
-</tr>
-</thead>
-
-<tbody id="list"></tbody>
-</table>
-</div>
-
-<!-- FORM -->
-<div class="panel" id="form" style="display:none;">
-<h3>Rekod Baru</h3>
-
-<input type="file" id="photo">
-
-<input id="nama" placeholder="Nama">
-
-<input id="jawatan" placeholder="Jawatan">
-
-<select id="status">
-  <option value="Ada">Ada</option>
-  <option value="Tiada">Tiada</option>
-  <option value="Cuti">Cuti</option>
-  <option value="Urusan Rasmi di Luar">Urusan Rasmi di Luar</option>
-</select>
-
-<input id="catatan" placeholder="Catatan">
-
-<button onclick="add()">Simpan Rekod</button>
-</div>
-
-</div>
-</div>
-</div>
+<div id="list"></div>
 
 <script>
+let USER_EMAIL = Session.getActiveUser().getEmail(); // Apps Script auto email
+let ROLE = "";
 
-const API = "YOUR_SCRIPT_URL";
+function init() {
+  google.script.run.withSuccessHandler(role => {
+    ROLE = role;
 
-let DATA = [];
+    if (ROLE === "admin") {
+      document.getElementById("adminPanel").style.display = "block";
+    }
 
-/* ================= LOGIN ================= */
-function login(){
-  localStorage.setItem("user", u.value);
-  loginBox.style.display="none";
-  app.style.display="block";
-  load();
+    loadStaff();
+  }).getRole(USER_EMAIL);
 }
 
-/* ================= LOAD ================= */
-async function load(){
-  DATA = await (await fetch(API+"?action=getData")).json();
-  render();
+function loadStaff() {
+  google.script.run.withSuccessHandler(staff => {
+    google.script.run.withSuccessHandler(statusMap => {
+
+      let html = "";
+      let dropdown = "";
+
+      staff.forEach(s => {
+        let st = statusMap[s.id] || {status:"-", catatan:""};
+
+        html += `
+          <div class="card">
+            <img src="${s.photo}">
+            <h3>${s.nama}</h3>
+            <p>${s.jawatan} - ${s.bahagian}</p>
+            <p><b>Status:</b> ${st.status}</p>
+            <p>${st.catatan || ""}</p>
+          </div>
+        `;
+
+        dropdown += `<option value="${s.id}">${s.nama}</option>`;
+      });
+
+      document.getElementById("list").innerHTML = html;
+      document.getElementById("staffList").innerHTML = dropdown;
+
+    }).getStatus();
+
+  }).getStaff();
 }
 
-/* ================= RENDER ================= */
-function render(){
+function addStaff() {
+  let file = document.getElementById("photo").files[0];
 
-  list.innerHTML = DATA.map(x=>`
+  let reader = new FileReader();
+  reader.onload = function(e) {
 
-    <tr>
-      <td>
-        ${x.photo ? `<img src="${x.photo}" style="width:38px;height:38px;border-radius:50%">` : ""}
-      </td>
+    google.script.run.addStaff({
+      nama: nama.value,
+      jawatan: jawatan.value,
+      bahagian: bahagian.value,
+      photo: e.target.result
+    }, USER_EMAIL);
 
-      <td>${x.nama || "-"}</td>
-      <td>${x.jawatan || "-"}</td>
-      <td>${x.status || "-"}</td>
-      <td>${x.catatan || "-"}</td>
-    </tr>
-
-  `).join("");
-}
-
-/* ================= ADD ================= */
-async function add(){
-
-  const file = photo.files[0];
-
-  let img = "";
-
-  if(file){
-    img = await new Promise(resolve=>{
-      const reader = new FileReader();
-      reader.onload = ()=>resolve(reader.result);
-      reader.readAsDataURL(file);
-    });
-  }
-
-  await fetch(API,{
-    method:"POST",
-    body: new URLSearchParams({
-      action:"add",
-      nama:nama.value,
-      jawatan:jawatan.value,
-      status:status.value,
-      catatan:catatan.value,
-      photo:img
-    })
-  });
-
-  nama.value="";
-  jawatan.value="";
-  catatan.value="";
-  photo.value="";
-
-  toggleForm();
-  load();
-}
-
-/* ================= DATETIME LIVE ================= */
-function updateTime(){
-
-  const now = new Date();
-
-  const options = {
-    weekday:'long',
-    year:'numeric',
-    month:'long',
-    day:'numeric'
+    alert("Berjaya tambah staf");
+    loadStaff();
   };
 
-  const date = now.toLocaleDateString('ms-MY', options);
-  const time = now.toLocaleTimeString('ms-MY');
-
-  document.getElementById("datetime").innerHTML = date + " | " + time;
+  reader.readAsDataURL(file);
 }
 
-setInterval(updateTime,1000);
-updateTime();
+function updateStatus() {
+  google.script.run.updateStatus({
+    id: staffList.value,
+    status: status.value,
+    catatan: catatan.value
+  }, USER_EMAIL);
 
-/* ================= UI ================= */
-function toggleForm(){
-  form.style.display = form.style.display==="block"?"none":"block";
+  alert("Status dikemaskini");
+  loadStaff();
 }
 
-function logout(){
-  localStorage.clear();
-  location.reload();
-}
-
+init();
 </script>
 
 </body>
