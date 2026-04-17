@@ -3,24 +3,170 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HR System Cloud FIXED</title>
+<title>HR System Pro Full FIX</title>
 
 <style>
-body{margin:0;font-family:system-ui;background:#0b1220;color:#e5e7eb}
-input,select,button{padding:10px;width:260px;margin:5px;border-radius:10px;border:none}
-button{background:#3b82f6;color:white;cursor:pointer}
-.main{display:none}
-.container{display:flex;height:100vh}
-.sidebar{width:220px;background:#111827;padding:10px}
-.menu{padding:10px;cursor:pointer;border-radius:8px;margin-bottom:5px}
-.menu:hover{background:#1f2937}
-.page{display:none;padding:15px;flex:1;overflow:auto}
-.staff-card{background:#111827;padding:10px;margin:8px;border-radius:10px}
-.status{padding:5px 10px;border-radius:20px;cursor:pointer;display:inline-block}
-.hadir{background:#22c55e}
-.cuti{background:#f59e0b;color:black}
-.tiada{background:#ef4444}
-.urusan{background:#3b82f6}
+:root{
+--bg:#0b1220;
+--panel:#111827;
+--panel2:#0f172a;
+--blue:#3b82f6;
+--green:#22c55e;
+--yellow:#f59e0b;
+--red:#ef4444;
+--text:#e5e7eb;
+}
+
+*{box-sizing:border-box;font-family:system-ui;}
+
+body{
+margin:0;
+background:var(--bg);
+color:var(--text);
+}
+
+/* LOGIN */
+#loginPage{
+height:100vh;
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+gap:10px;
+background:radial-gradient(circle,#1e293b,#0b1220);
+}
+
+input,select,button{
+width:260px;
+padding:10px;
+border:none;
+border-radius:10px;
+background:var(--panel);
+color:white;
+outline:none;
+}
+
+button{
+background:var(--blue);
+cursor:pointer;
+font-weight:600;
+}
+button:hover{opacity:0.85;}
+
+/* LAYOUT */
+.main{display:none;height:100vh;}
+.container{display:flex;height:100vh;}
+
+/* SIDEBAR */
+.sidebar{
+width:230px;
+background:var(--panel2);
+padding:15px;
+}
+
+.menu{
+padding:12px;
+border-radius:10px;
+cursor:pointer;
+margin-bottom:8px;
+}
+.menu:hover{background:#1f2937;}
+.menu.active{background:var(--blue);}
+
+/* PAGE */
+.page{
+flex:1;
+padding:20px;
+overflow:auto;
+display:none;
+}
+
+/* KPI */
+.kpi-grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+gap:12px;
+margin-top:10px;
+}
+
+.kpi{
+background:var(--panel);
+padding:15px;
+border-radius:14px;
+text-align:center;
+}
+
+/* STAFF */
+.staff-card{
+display:flex;
+justify-content:space-between;
+align-items:center;
+background:var(--panel);
+padding:14px;
+border-radius:14px;
+margin-bottom:10px;
+}
+
+.left{display:flex;gap:12px;align-items:center;}
+
+.avatar{
+width:48px;height:48px;border-radius:50%;
+object-fit:cover;border:2px solid var(--blue);
+}
+
+.status{
+font-size:11px;
+padding:5px 10px;
+border-radius:999px;
+cursor:pointer;
+display:inline-block;
+margin-top:4px;
+}
+
+.hadir{background:var(--green);}
+.cuti{background:var(--yellow);color:black;}
+.tiada{background:var(--red);}
+.urusan{background:var(--blue);}
+
+.actions button{
+width:32px;height:32px;
+margin-left:5px;
+border:none;
+border-radius:8px;
+cursor:pointer;
+}
+
+.edit{background:var(--blue);}
+.delete{background:var(--red);}
+
+/* TABLE */
+table{
+width:100%;
+border-collapse:collapse;
+background:var(--panel);
+border-radius:12px;
+overflow:hidden;
+}
+
+th,td{
+padding:12px;
+border-bottom:1px solid #1f2937;
+font-size:14px;
+}
+
+th{
+background:#1f2937;
+text-align:left;
+}
+
+.filters{
+display:flex;
+gap:10px;
+flex-wrap:wrap;
+margin-bottom:12px;
+}
+
+.small{opacity:0.7;font-size:13px;}
 </style>
 </head>
 
@@ -28,7 +174,7 @@ button{background:#3b82f6;color:white;cursor:pointer}
 
 <!-- LOGIN -->
 <div id="loginPage">
-<h2>LOGIN HR</h2>
+<h2>HR SYSTEM PRO</h2>
 <input id="user" placeholder="username">
 <input id="pass" type="password" placeholder="password">
 <button id="loginBtn">Login</button>
@@ -39,29 +185,41 @@ button{background:#3b82f6;color:white;cursor:pointer}
 <div class="container">
 
 <div class="sidebar">
-<div class="menu" onclick="show('dashboard')">Dashboard</div>
-<div class="menu" onclick="show('staff')">Staff</div>
-<div class="menu" onclick="show('add')">Add Staff</div>
+<div class="menu active" onclick="show('dashboard',this)">Dashboard</div>
+<div class="menu" onclick="show('staff',this)">Staff</div>
+<div class="menu" onclick="show('add',this)">Add Staff</div>
+<div class="menu" onclick="show('report',this)">Report</div>
 </div>
 
 <!-- DASHBOARD -->
 <div class="page" id="dashboard">
 <h2>Dashboard</h2>
-<h3 id="total">0</h3>
+<div class="small" id="clock"></div>
+
+<div class="kpi-grid">
+<div class="kpi">Total <h3 id="total">0</h3></div>
+<div class="kpi">Hadir <h3 id="hadir">0</h3></div>
+<div class="kpi">Cuti <h3 id="cuti">0</h3></div>
+<div class="kpi">Tiada <h3 id="tiada">0</h3></div>
+<div class="kpi">Urusan <h3 id="urusan">0</h3></div>
+</div>
 </div>
 
 <!-- STAFF -->
 <div class="page" id="staff">
-<input id="search" placeholder="Search..." oninput="render()">
+<input id="search" placeholder="Search nama..." oninput="render()">
 <div id="staffView"></div>
 </div>
 
 <!-- ADD -->
 <div class="page" id="add">
-<h2>Add Staff</h2>
+<h2>Add / Edit Staff</h2>
+
 <input id="name" placeholder="Nama">
 <input id="job" placeholder="Jawatan">
 <input id="dept" placeholder="Bahagian">
+
+<input type="file" id="photo">
 
 <select id="status">
 <option>Hadir</option>
@@ -73,16 +231,41 @@ button{background:#3b82f6;color:white;cursor:pointer}
 <button onclick="saveStaff()">Simpan</button>
 </div>
 
+<!-- REPORT -->
+<div class="page" id="report">
+<h2>Report</h2>
+
+<div class="filters">
+<select id="filterDate" onchange="renderReport()"></select>
+<select id="filterDept" onchange="renderReport()"></select>
+</div>
+
+<table>
+<thead>
+<tr>
+<th>Nama</th>
+<th>Jawatan</th>
+<th>Bahagian</th>
+<th>Tarikh</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody id="reportBody"></tbody>
+</table>
+</div>
+
 </div>
 </div>
 
 <script>
 
-const API = "PASTE_WEB_APP_URL_HERE";
+const API = "https://script.google.com/macros/s/AKfycbyUiKO-L6GrTQOla6ROgYElHM8iL26I-JCCurbxNyQ3yQLSifB4V6jNn5ZWOL7tRTWnYQ/exec";
 
 let staff = [];
+let reports = {};
+let editId = null;
 
-/* LOGIN (FIXED GLOBAL) */
+/* ================= LOGIN FIX ================= */
 window.login = function(){
 const u = document.getElementById("user").value;
 const p = document.getElementById("pass").value;
@@ -93,21 +276,25 @@ document.querySelector(".main").style.display="flex";
 show("dashboard");
 loadStaff();
 }else{
-alert("Salah login");
+alert("Login salah");
 }
-}
+};
 
-/* attach button safely */
-document.getElementById("loginBtn").addEventListener("click", login);
+document.getElementById("loginBtn").addEventListener("click", window.login);
 
-/* NAV */
-window.show = function(id){
+/* ================= NAV ================= */
+window.show = function(id,el){
 document.querySelectorAll(".page").forEach(p=>p.style.display="none");
 document.getElementById(id).style.display="block";
-render();
-}
 
-/* LOAD */
+document.querySelectorAll(".menu").forEach(m=>m.classList.remove("active"));
+if(el) el.classList.add("active");
+
+render();
+if(id==="report") renderReport();
+};
+
+/* ================= LOAD ================= */
 async function loadStaff(){
 try{
 const res = await fetch(API,{
@@ -117,15 +304,19 @@ body:JSON.stringify({action:"getStaff"})
 staff = await res.json();
 render();
 }catch(e){
-alert("API error / Google Script belum deploy");
 console.log(e);
+alert("API belum connect / Google Script belum deploy");
 }
 }
 
-/* SAVE */
+/* ================= SAVE ================= */
 window.saveStaff = async function(){
 
-await fetch(API,{
+const file = document.getElementById("photo").files[0];
+
+function commit(img){
+
+fetch(API,{
 method:"POST",
 body:JSON.stringify({
 action:"addStaff",
@@ -133,7 +324,7 @@ name:name.value,
 job:job.value,
 dept:dept.value,
 status:status.value,
-photo:"https://i.pravatar.cc/150"
+photo:img||"https://i.pravatar.cc/150"
 })
 });
 
@@ -141,16 +332,23 @@ loadStaff();
 show("staff");
 }
 
-/* DELETE */
+if(file){
+const r = new FileReader();
+r.onload=()=>commit(r.result);
+r.readAsDataURL(file);
+}else commit();
+};
+
+/* ================= DELETE ================= */
 window.del = async function(id){
 await fetch(API,{
 method:"POST",
 body:JSON.stringify({action:"deleteStaff",id})
 });
 loadStaff();
-}
+};
 
-/* STATUS TOGGLE */
+/* ================= STATUS ================= */
 window.toggleStatus = async function(id){
 
 let s = staff.find(x=>x.id===id);
@@ -161,7 +359,7 @@ await fetch(API,{
 method:"POST",
 body:JSON.stringify({
 action:"updateStaff",
-id:id,
+id,
 name:s.name,
 job:s.job,
 dept:s.dept,
@@ -171,12 +369,18 @@ photo:s.photo
 });
 
 loadStaff();
-}
+};
 
-/* RENDER */
+/* ================= RENDER ================= */
 function render(){
 
+document.getElementById("clock").innerText = new Date().toLocaleString();
+
 total.innerText = staff.length;
+hadir.innerText = staff.filter(s=>s.status==="Hadir").length;
+cuti.innerText = staff.filter(s=>s.status==="Cuti").length;
+tiada.innerText = staff.filter(s=>s.status==="Tiada").length;
+urusan.innerText = staff.filter(s=>s.status==="Urusan Rasmi Di Luar").length;
 
 let kw = (search.value||"").toLowerCase();
 
@@ -191,23 +395,32 @@ s.status==="Tiada"?"tiada":"urusan";
 
 return `
 <div class="staff-card">
+<div class="left">
+<img class="avatar" src="${s.photo}">
+<div>
 <b>${s.name}</b><br>
-${s.job}<br>
-${s.dept}<br>
+<small>${s.job}</small><br>
+<small>${s.dept}</small><br>
 
 <span class="status ${cls}" onclick="toggleStatus(${s.id})">
 ${s.status}
 </span>
+</div>
+</div>
 
-<br><button onclick="del(${s.id})">Delete</button>
+<div class="actions">
+<button class="edit" onclick="edit(${s.id})">✏️</button>
+<button class="delete" onclick="del(${s.id})">🗑️</button>
+</div>
 </div>
 `;
 }).join("");
 
-staffView.innerHTML = html;
+document.getElementById("staffView").innerHTML = html;
+
 }
 
-/* START */
+/* ================= INIT ================= */
 show("dashboard");
 
 </script>
