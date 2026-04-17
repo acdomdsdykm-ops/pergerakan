@@ -68,13 +68,9 @@ username:u.value,
 password:p.value
 });
 
-if(r.status=="ok"){
-sessionStorage.setItem("role",r.role);
-login.style.display="none";
-app.style.display="block";
-load();
-}else{
-alert("Login gagal");
+if(r.status === "ok"){
+  sessionStorage.setItem("role", r.role);
+  location.reload();
 }
 }
 
@@ -107,8 +103,9 @@ load();
 
 /* ================= LOGOUT ================= */
 function logout(){
-sessionStorage.clear();
-location.reload();
+  sessionStorage.clear();
+  localStorage.clear();
+  location.reload();
 }
 
 </script>
